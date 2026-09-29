@@ -1,6 +1,5 @@
 package com.example.demo.domain.model;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 
 public class Usuario {
