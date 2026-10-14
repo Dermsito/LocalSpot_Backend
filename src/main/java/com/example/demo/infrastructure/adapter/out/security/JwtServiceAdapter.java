@@ -51,6 +51,16 @@ public class JwtServiceAdapter implements JwtServicePort {
     }
 
     @Override
+    public String extractTipoUsuario(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("tipoUsuario", String.class);
+    }
+
+    @Override
     public boolean isTokenValid(String token) {
         try {
             Claims claims = Jwts.parser()
@@ -62,5 +72,10 @@ public class JwtServiceAdapter implements JwtServicePort {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public long getExpirationMs() {
+        return expirationMs;
     }
 }

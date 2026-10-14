@@ -56,7 +56,7 @@ public class CategoriaRepositoryAdapter implements CategoriaRepositoryPort {
 
     @Override
     public boolean existsByNombreCategoriaAndIdNot(String nombreCategoria, Long idCategoria) {
-        return categoriaJpaRepository.existsByNombreCategoriaAndIdNot(nombreCategoria, idCategoria);
+        return categoriaJpaRepository.existsByNombreCategoriaAndIdCategoriaNot(nombreCategoria, idCategoria);
     }
 
     private Categoria toDomain(CategoriaJpaEntity entity) {

@@ -1,81 +1,107 @@
 package com.example.demo.infrastructure.adapter.in.web;
 
+import com.example.demo.domain.exception.CalificacionDuplicadaException;
+import com.example.demo.domain.exception.CalificacionNoEncontradaException;
+import com.example.demo.domain.exception.CategoriaEnUsoException;
 import com.example.demo.domain.exception.CategoriaNoEncontradaException;
 import com.example.demo.domain.exception.CorreoDuplicadoException;
 import com.example.demo.domain.exception.CredencialesInvalidasException;
+import com.example.demo.domain.exception.EstadoReporteInvalidoException;
+import com.example.demo.domain.exception.FavoritoDuplicadoException;
+import com.example.demo.domain.exception.LugarNoEncontradoException;
 import com.example.demo.domain.exception.OperacionNoAutorizadaException;
 import com.example.demo.domain.exception.PreferenciaNoEncontradaException;
+import com.example.demo.domain.exception.RecomendacionSinPreferenciasException;
+import com.example.demo.domain.exception.ReporteDuplicadoException;
+import com.example.demo.domain.exception.ReporteNoEncontradoException;
 import com.example.demo.domain.exception.UsuarioNoEncontradoException;
+import com.example.demo.domain.exception.VerificacionInvalidaException;
 import com.example.demo.infrastructure.adapter.in.web.dto.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
-    @ExceptionHandler(CorreoDuplicadoException.class)
-    public ResponseEntity<ErrorResponse> handleCorreoDuplicado(CorreoDuplicadoException ex) {
-        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage());
+    // 409 Conflict
+    @ExceptionHandler({CorreoDuplicadoException.class, FavoritoDuplicadoException.class,
+            CalificacionDuplicadaException.class, ReporteDuplicadoException.class,
+            CategoriaEnUsoException.class})
+    public ResponseEntity<ErrorResponse> handleConflicto(RuntimeException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(CredencialesInvalidasException.class)
-    public ResponseEntity<ErrorResponse> handleCredencialesInvalidas(CredencialesInvalidasException ex) {
-        return build(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage());
+    // 401 Unauthorized
+    @ExceptionHandler({CredencialesInvalidasException.class, AuthenticationException.class})
+    public ResponseEntity<ErrorResponse> handleNoAutenticado(Exception ex, HttpServletRequest request) {
+        return build(HttpStatus.UNAUTHORIZED, "Autenticacion requerida o credenciales invalidas", request);
     }
 
-    @ExceptionHandler({UsuarioNoEncontradoException.class, CategoriaNoEncontradaException.class,
-            PreferenciaNoEncontradaException.class})
-    public ResponseEntity<ErrorResponse> handleNoEncontrado(RuntimeException ex) {
-        return build(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
-    }
-
+    // 403 Forbidden
     @ExceptionHandler(OperacionNoAutorizadaException.class)
-    public ResponseEntity<ErrorResponse> handleNoAutorizado(OperacionNoAutorizadaException ex) {
-        return build(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleNoAutorizado(OperacionNoAutorizadaException ex,
+                                                               HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException ex) {
-        return build(HttpStatus.UNAUTHORIZED, "Unauthorized", "Autenticacion requerida o token invalido");
+    // 404 Not Found
+    @ExceptionHandler({UsuarioNoEncontradoException.class, CategoriaNoEncontradaException.class,
+            PreferenciaNoEncontradaException.class, LugarNoEncontradoException.class,
+            CalificacionNoEncontradaException.class, ReporteNoEncontradoException.class})
+    public ResponseEntity<ErrorResponse> handleNoEncontrado(RuntimeException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
+    // 400 Bad Request - validaciones de negocio
+    @ExceptionHandler({EstadoReporteInvalidoException.class, VerificacionInvalidaException.class,
+            RecomendacionSinPreferenciasException.class, IllegalArgumentException.class})
+    public ResponseEntity<ErrorResponse> handleSolicitudInvalida(RuntimeException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    // 400 Bad Request - validaciones de Bean Validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidacion(MethodArgumentNotValidException ex) {
-        String mensaje = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining("; "));
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", mensaje);
+    public ResponseEntity<ErrorResponse> handleValidacion(MethodArgumentNotValidException ex,
+                                                            HttpServletRequest request) {
+        List<ErrorResponse.FieldError> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> new ErrorResponse.FieldError(fe.getField(), fe.getDefaultMessage()))
+                .collect(Collectors.toList());
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Error de validacion",
+                request.getRequestURI(),
+                errors
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    // 400 Bad Request - cuerpo invalido
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleCuerpoInvalido(HttpMessageNotReadableException ex) {
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", "Cuerpo de solicitud invalido o ausente");
+    public ResponseEntity<ErrorResponse> handleCuerpoInvalido(HttpMessageNotReadableException ex,
+                                                                HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Cuerpo de solicitud invalido o ausente", request);
     }
 
+    // 500 Internal Server Error
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenerico(Exception ex) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
-                "Ocurrio un error inesperado");
+    public ResponseEntity<ErrorResponse> handleGenerico(Exception ex, HttpServletRequest request) {
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrio un error inesperado", request);
     }
 
-    private ResponseEntity<ErrorResponse> build(HttpStatus status, String error, String mensaje) {
+    private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, HttpServletRequest request) {
         ErrorResponse response = new ErrorResponse(
                 status.value(),
-                error,
-                mensaje,
-                LocalDateTime.now().format(FORMATTER)
+                message,
+                request.getRequestURI()
         );
         return ResponseEntity.status(status).body(response);
     }

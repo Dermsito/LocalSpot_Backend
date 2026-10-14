@@ -1,51 +1,53 @@
 package com.example.demo.infrastructure.adapter.in.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Respuesta de error uniforme segun el contrato con el frontend:
+ * {timestamp, status, message, path, errors[]}
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
-    private int codigo;
-    private String error;
-    private String mensaje;
-    private String timestamp;
+    private LocalDateTime timestamp;
+    private int status;
+    private String message;
+    private String path;
+    private List<FieldError> errors;
 
     public ErrorResponse() {
     }
 
-    public ErrorResponse(int codigo, String error, String mensaje, String timestamp) {
-        this.codigo = codigo;
-        this.error = error;
-        this.mensaje = mensaje;
-        this.timestamp = timestamp;
+    public ErrorResponse(int status, String message, String path) {
+        this.timestamp = LocalDateTime.now();
+        this.status = status;
+        this.message = message;
+        this.path = path;
     }
 
-    public int getCodigo() {
-        return codigo;
+    public ErrorResponse(int status, String message, String path, List<FieldError> errors) {
+        this(status, message, path);
+        this.errors = errors;
     }
 
-    public void setCodigo(int codigo) {
-        this.codigo = codigo;
-    }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 
-    public String getError() {
-        return error;
-    }
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
 
-    public void setError(String error) {
-        this.error = error;
-    }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
 
-    public String getMensaje() {
-        return mensaje;
-    }
+    public String getPath() { return path; }
+    public void setPath(String path) { this.path = path; }
 
-    public void setMensaje(String mensaje) {
-        this.mensaje = mensaje;
-    }
+    public List<FieldError> getErrors() { return errors; }
+    public void setErrors(List<FieldError> errors) { this.errors = errors; }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
+    public record FieldError(String field, String message) {
     }
 }

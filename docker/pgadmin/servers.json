@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "LocalSpot DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "localspot",
+      "Username": "localspot",
+      "SSLMode": "prefer",
+      "Comment": "Base de datos LocalSpot"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 package com.example.demo.infrastructure.config;
 
 import com.example.demo.infrastructure.adapter.out.security.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,6 +23,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Value("${localspot.cors.allowed-origins:http://localhost:3000}")
+    private String allowedOrigins;
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -38,10 +42,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/registro").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/logout").permitAll()
-                        .requestMatchers(HttpMethod.GET,  "/api/categorias").permitAll()
+                        // Auth publico
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios/registro", "/api/usuarios/login",
+                                "/api/usuarios/logout")
+                        .permitAll()
+                        // Categorias solo lectura publico
+                        .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
+                        // Lugares: busqueda y detalle publicos (solo VERIFICADOS)
+                        .requestMatchers(HttpMethod.GET, "/api/lugares", "/api/lugares/**").permitAll()
+                        // Swagger y Actuator
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/actuator/health/**",
@@ -51,10 +62,14 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                "/error"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+                                "/error")
+                        .permitAll()
+                        // Admin solo ADMINISTRADOR
+                        .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
+                        // Establecimientos solo PROPIETARIO
+                        .requestMatchers("/api/establecimientos/**").hasRole("PROPIETARIO")
+                        // Resto requiere autenticacion
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -63,7 +78,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(Arrays.asList("http://localhost:4200", "http://localhost:*", "*"));
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));

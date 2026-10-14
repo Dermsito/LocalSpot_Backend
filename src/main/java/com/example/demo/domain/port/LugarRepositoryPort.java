@@ -6,16 +6,22 @@ import com.example.demo.domain.model.Pagina;
 import com.example.demo.domain.model.Paginacion;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface LugarRepositoryPort {
     Optional<Lugar> findById(Long idLugar);
+
     Lugar save(Lugar lugar);
+
     void deleteById(Long idLugar);
+
     boolean existsByCategoriaId(Long idCategoria);
 
+    List<Lugar> findByPropietarioId(Long idPropietario);
+
     Pagina<Lugar> buscarConFiltros(String q, Long categoriaId, BigDecimal latitud,
-                                   BigDecimal longitud, BigDecimal radioKm,
-                                   BigDecimal precioMin, BigDecimal precioMax,
-                                   EstadoVerificacion estadoVerificacion, Paginacion paginacion);
+            BigDecimal longitud, BigDecimal radioKm,
+            BigDecimal precioMin, BigDecimal precioMax,
+            EstadoVerificacion estadoVerificacion, Paginacion paginacion);
 }

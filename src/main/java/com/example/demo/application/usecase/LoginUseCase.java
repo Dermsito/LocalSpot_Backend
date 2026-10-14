@@ -20,7 +20,7 @@ public class LoginUseCase {
         this.jwtServicePort = jwtServicePort;
     }
 
-    public String ejecutar(String correo, String contrasenaPlana) {
+    public ResultadoLogin ejecutar(String correo, String contrasenaPlana) {
         Usuario usuario = usuarioRepositoryPort.findByCorreo(correo)
                 .orElse(null);
 
@@ -32,6 +32,13 @@ public class LoginUseCase {
             throw new CredencialesInvalidasException("Credenciales inválidas");
         }
 
-        return jwtServicePort.generateToken(usuario);
+        String token = jwtServicePort.generateToken(usuario);
+        String rol = usuario.getTipoUsuario() != null ? usuario.getTipoUsuario().name() : "FINAL";
+
+        return new ResultadoLogin(token, jwtServicePort.getExpirationMs(),
+                usuario.getIdUsuario(), usuario.getNombre(), rol);
+    }
+
+    public record ResultadoLogin(String token, long expiracionMs, Long id, String nombre, String rol) {
     }
 }

@@ -1,0 +1,95 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: localspot-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-localspot}
+      POSTGRES_USER: ${POSTGRES_USER:-localspot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localspot123}
+    ports:
+      - "${POSTGRES_PORT:-15432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-localspot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - localspot-net
+
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    container_name: localspot-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@localspot.test}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "${PGADMIN_PORT:-15050}:80"
+    volumes:
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - localspot-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: localspot-backend
+    environment:
+      PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-localspot}
+      DB_USER: ${POSTGRES_USER:-localspot}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-localspot123}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:-localspot-super-secret-key-12345678901234567890123456789012}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localspot.test}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123456}
+      UPLOAD_DIR: /app/uploads
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    ports:
+      - "${BACKEND_PORT:-18080}:8080"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks:
+      - localspot-net
+
+  frontend:
+    # FRONTEND PENDIENTE: el repositorio del frontend está en GitHub y está incompleto.
+    # Cuando esté listo, reemplazar esta sección por un build context que apunte al repo.
+    # Ejemplo:
+    #   build:
+    #     context: ../LocalSpot_Frontend
+    #     dockerfile: Dockerfile
+    image: nginx:alpine
+    container_name: localspot-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - localspot-net
+
+networks:
+  localspot-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  uploads_data:

@@ -38,10 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
         if (jwtServicePort.isTokenValid(token)) {
             Long usuarioId = jwtServicePort.extractUsuarioId(token);
+            String tipoUsuario = jwtServicePort.extractTipoUsuario(token);
+            String role = "ROLE_" + (tipoUsuario != null ? tipoUsuario : "FINAL");
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                     usuarioId,
                     null,
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USUARIO"))
+                    Collections.singletonList(new SimpleGrantedAuthority(role))
             );
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);

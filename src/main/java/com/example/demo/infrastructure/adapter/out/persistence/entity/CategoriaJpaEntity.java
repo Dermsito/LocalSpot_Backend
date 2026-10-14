@@ -11,7 +11,7 @@ public class CategoriaJpaEntity {
     @Column(name = "id_categoria")
     private Long idCategoria;
 
-    @Column(name = "nombre_categoria", nullable = false, length = 50)
+    @Column(name = "nombre_categoria", nullable = false, length = 80)
     private String nombreCategoria;
 
     public Long getIdCategoria() {

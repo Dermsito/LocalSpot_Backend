@@ -78,8 +78,15 @@ public class UsuarioController {
             @Parameter(description = "Credenciales de acceso", required = true,
                     schema = @Schema(implementation = LoginRequest.class))
             LoginRequest request) {
-        String token = loginUseCase.ejecutar(request.getCorreo(), request.getContrasena());
-        return ResponseEntity.ok(new LoginResponse(token));
+        LoginUseCase.ResultadoLogin resultado = loginUseCase.ejecutar(request.getCorreo(), request.getContrasena());
+        LoginResponse response = new LoginResponse(
+                resultado.token(),
+                resultado.expiracionMs(),
+                resultado.id(),
+                resultado.nombre(),
+                resultado.rol()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
