@@ -6,6 +6,12 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/localspot_db}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:10}
+      minimum-idle: ${DB_MIN_IDLE:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}
 
   jpa:
     hibernate:
@@ -35,12 +41,17 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       probes:
         enabled: true
-      show-details: never
+      show-details: when-authorized
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
   info:
     build:
       enabled: true
@@ -57,6 +68,8 @@ localspot:
   admin:
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}
+  storage:
+    upload-dir: ${UPLOAD_DIR:./uploads}
   integrations:
     ai:
       api-key: ${AI_API_KEY:}
@@ -64,8 +77,35 @@ localspot:
     maps:
       api-key: ${MAPS_API_KEY:}
 
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      aiService:
+        base-config: default
+      geoService:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 2
+        wait-duration: 500ms
+    instances:
+      aiService:
+        base-config: default
+      geoService:
+        base-config: default
+
 logging:
   level:
     root: ${LOG_LEVEL:INFO}
     org.springframework.web: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${LOG_LEVEL:INFO}
     org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{correlationId:-no-cid}] %-5level %logger{36} - %msg%n"
