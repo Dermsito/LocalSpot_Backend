@@ -28,6 +28,9 @@ public class LugarJpaEntity {
     @Column(name = "direccion", length = 255)
     private String direccion;
 
+    @Column(name = "horario", length = 255)
+    private String horario;
+
     @Column(name = "latitud", precision = 10, scale = 7)
     private BigDecimal latitud;
 
@@ -100,6 +103,14 @@ public class LugarJpaEntity {
 
     public void setDireccion(String direccion) {
         this.direccion = direccion;
+    }
+
+    public String getHorario() {
+        return horario;
+    }
+
+    public void setHorario(String horario) {
+        this.horario = horario;
     }
 
     public BigDecimal getLatitud() {

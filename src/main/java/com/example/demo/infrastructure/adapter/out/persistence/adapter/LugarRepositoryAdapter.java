@@ -7,11 +7,9 @@ import com.example.demo.domain.model.Paginacion;
 import com.example.demo.domain.port.LugarRepositoryPort;
 import com.example.demo.infrastructure.adapter.out.persistence.entity.LugarJpaEntity;
 import com.example.demo.infrastructure.adapter.out.persistence.repository.LugarJpaRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -23,12 +21,11 @@ import java.util.stream.Collectors;
 public class LugarRepositoryAdapter implements LugarRepositoryPort {
 
     private final LugarJpaRepository lugarJpaRepository;
+    private final JdbcTemplate jdbcTemplate;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    public LugarRepositoryAdapter(LugarJpaRepository lugarJpaRepository) {
+    public LugarRepositoryAdapter(LugarJpaRepository lugarJpaRepository, JdbcTemplate jdbcTemplate) {
         this.lugarJpaRepository = lugarJpaRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -73,44 +70,35 @@ public class LugarRepositoryAdapter implements LugarRepositoryPort {
 
         String sql = """
                 SELECT l.id_lugar FROM lugar l
-                WHERE (:q IS NULL OR LOWER(l.nombre) LIKE LOWER(CONCAT('%', :q, '%'))
-                       OR LOWER(l.descripcion) LIKE LOWER(CONCAT('%', :q, '%')))
-                  AND (:categoriaId IS NULL OR l.id_categoria = :categoriaId)
-                  AND (:estado IS NULL OR l.estado_verificacion = :estado)
-                  AND (:precioMin IS NULL OR l.precio_max >= :precioMin)
-                  AND (:precioMax IS NULL OR l.precio_min <= :precioMax)
-                  AND (:latitud IS NULL OR :longitud IS NULL OR :radioKm IS NULL
+                WHERE (?::text IS NULL OR LOWER(l.nombre) LIKE LOWER(CONCAT('%', ?::text, '%'))
+                       OR LOWER(l.descripcion) LIKE LOWER(CONCAT('%', ?::text, '%')))
+                  AND (?::bigint IS NULL OR l.id_categoria = ?::bigint)
+                  AND (?::text IS NULL OR l.estado_verificacion = ?::text)
+                  AND (?::numeric IS NULL OR l.precio_max >= ?::numeric)
+                  AND (?::numeric IS NULL OR l.precio_min <= ?::numeric)
+                  AND (?::numeric IS NULL OR ?::numeric IS NULL OR ?::numeric IS NULL
                        OR (6371 * ACOS(LEAST(1.0, GREATEST(-1.0,
-                           COS(RADIANS(:latitud)) * COS(RADIANS(l.latitud))
-                           * COS(RADIANS(l.longitud) - RADIANS(:longitud))
-                           + SIN(RADIANS(:latitud)) * SIN(RADIANS(l.latitud))
-                       ))) <= :radioKm)
+                           COS(RADIANS(?::numeric)) * COS(RADIANS(l.latitud))
+                           * COS(RADIANS(l.longitud) - RADIANS(?::numeric))
+                           + SIN(RADIANS(?::numeric)) * SIN(RADIANS(l.latitud))
+                       ))) <= ?::numeric))
                 ORDER BY l.fecha_registro DESC
-                LIMIT :limit OFFSET :offset
+                LIMIT ?::int OFFSET ?::int
                 """;
 
-        Query query = entityManager.createNativeQuery(sql);
-        query.setParameter("q", q);
-        query.setParameter("categoriaId", categoriaId);
-        query.setParameter("estado", estadoStr);
-        query.setParameter("precioMin", precioMin);
-        query.setParameter("precioMax", precioMax);
-        query.setParameter("latitud", latitud);
-        query.setParameter("longitud", longitud);
-        query.setParameter("radioKm", radioKm);
-        query.setParameter("limit", limit);
-        query.setParameter("offset", offset);
-
-        @SuppressWarnings("unchecked")
-        List<?> rawResults = query.getResultList();
-        List<Long> ids = rawResults.stream()
-                .map(o -> ((Number) o).longValue())
-                .collect(Collectors.toList());
+        List<Long> ids = jdbcTemplate.queryForList(sql, Long.class,
+                q, q, q,
+                categoriaId, categoriaId,
+                estadoStr, estadoStr,
+                precioMin, precioMin,
+                precioMax, precioMax,
+                latitud, longitud, radioKm,
+                latitud, longitud, latitud, radioKm,
+                limit, offset);
 
         List<LugarJpaEntity> entities = ids.isEmpty() ? List.of()
                 : lugarJpaRepository.findAllById(ids);
 
-        // Preservar el orden de la consulta
         java.util.Map<Long, LugarJpaEntity> byId = entities.stream()
                 .collect(Collectors.toMap(LugarJpaEntity::getIdLugar, e -> e));
         List<Lugar> content = ids.stream()
@@ -119,11 +107,33 @@ public class LugarRepositoryAdapter implements LugarRepositoryPort {
                 .map(this::toDomain)
                 .collect(Collectors.toList());
 
-        long total = lugarJpaRepository.contarConFiltros(
-                q, categoriaId, latitud, longitud, radioKm, precioMin, precioMax, estadoStr);
+        String countSql = """
+                SELECT COUNT(*) FROM lugar l
+                WHERE (?::text IS NULL OR LOWER(l.nombre) LIKE LOWER(CONCAT('%', ?::text, '%'))
+                       OR LOWER(l.descripcion) LIKE LOWER(CONCAT('%', ?::text, '%')))
+                  AND (?::bigint IS NULL OR l.id_categoria = ?::bigint)
+                  AND (?::text IS NULL OR l.estado_verificacion = ?::text)
+                  AND (?::numeric IS NULL OR l.precio_max >= ?::numeric)
+                  AND (?::numeric IS NULL OR l.precio_min <= ?::numeric)
+                  AND (?::numeric IS NULL OR ?::numeric IS NULL OR ?::numeric IS NULL
+                       OR (6371 * ACOS(LEAST(1.0, GREATEST(-1.0,
+                           COS(RADIANS(?::numeric)) * COS(RADIANS(l.latitud))
+                           * COS(RADIANS(l.longitud) - RADIANS(?::numeric))
+                           + SIN(RADIANS(?::numeric)) * SIN(RADIANS(l.latitud))
+                       ))) <= ?::numeric))
+                """;
 
-        int totalPages = (int) Math.ceil((double) total / limit);
-        return new Pagina<>(content, paginacion.page(), paginacion.size(), total, totalPages);
+        Long total = jdbcTemplate.queryForObject(countSql, Long.class,
+                q, q, q,
+                categoriaId, categoriaId,
+                estadoStr, estadoStr,
+                precioMin, precioMin,
+                precioMax, precioMax,
+                latitud, longitud, radioKm,
+                latitud, longitud, latitud, radioKm);
+
+        int totalPages = (int) Math.ceil((double) (total != null ? total : 0) / limit);
+        return new Pagina<>(content, paginacion.page(), paginacion.size(), total != null ? total : 0, totalPages);
     }
 
     private Lugar toDomain(LugarJpaEntity entity) {
@@ -134,6 +144,7 @@ public class LugarRepositoryAdapter implements LugarRepositoryPort {
         lugar.setNombre(entity.getNombre());
         lugar.setDescripcion(entity.getDescripcion());
         lugar.setDireccion(entity.getDireccion());
+        lugar.setHorario(entity.getHorario());
         lugar.setLatitud(entity.getLatitud());
         lugar.setLongitud(entity.getLongitud());
         lugar.setPrecioMin(entity.getPrecioMin());
@@ -154,6 +165,7 @@ public class LugarRepositoryAdapter implements LugarRepositoryPort {
         entity.setNombre(lugar.getNombre());
         entity.setDescripcion(lugar.getDescripcion());
         entity.setDireccion(lugar.getDireccion());
+        entity.setHorario(lugar.getHorario());
         entity.setLatitud(lugar.getLatitud());
         entity.setLongitud(lugar.getLongitud());
         entity.setPrecioMin(lugar.getPrecioMin());

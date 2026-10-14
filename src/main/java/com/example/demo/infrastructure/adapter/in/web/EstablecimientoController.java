@@ -30,7 +30,7 @@ public class EstablecimientoController {
     private final StoragePort storagePort;
 
     public EstablecimientoController(GestionarEstablecimientosUseCase gestionarEstablecimientosUseCase,
-                                      StoragePort storagePort) {
+            StoragePort storagePort) {
         this.gestionarEstablecimientosUseCase = gestionarEstablecimientosUseCase;
         this.storagePort = storagePort;
     }
@@ -42,6 +42,7 @@ public class EstablecimientoController {
             @RequestParam("idCategoria") Long idCategoria,
             @RequestParam(value = "descripcion", required = false) String descripcion,
             @RequestParam(value = "direccion", required = false) String direccion,
+            @RequestParam(value = "horario", required = false) String horario,
             @RequestParam(value = "latitud", required = false) java.math.BigDecimal latitud,
             @RequestParam(value = "longitud", required = false) java.math.BigDecimal longitud,
             @RequestParam(value = "precioMin", required = false) java.math.BigDecimal precioMin,
@@ -55,6 +56,7 @@ public class EstablecimientoController {
         datos.setIdCategoria(idCategoria);
         datos.setDescripcion(descripcion);
         datos.setDireccion(direccion);
+        datos.setHorario(horario);
         datos.setLatitud(latitud);
         datos.setLongitud(longitud);
         datos.setPrecioMin(precioMin);
@@ -67,8 +69,7 @@ public class EstablecimientoController {
                     Archivo archivo = new Archivo(
                             file.getOriginalFilename(),
                             file.getBytes(),
-                            file.getContentType()
-                    );
+                            file.getContentType());
                     String url = storagePort.store(archivo);
                     urlsFotos.add(url);
                 }
@@ -98,6 +99,7 @@ public class EstablecimientoController {
         r.setNombre(lugar.getNombre());
         r.setDescripcion(lugar.getDescripcion());
         r.setDireccion(lugar.getDireccion());
+        r.setHorario(lugar.getHorario());
         r.setLatitud(lugar.getLatitud());
         r.setLongitud(lugar.getLongitud());
         r.setPrecioMin(lugar.getPrecioMin());

@@ -113,18 +113,17 @@ public class PreferenciaController {
                 return ResponseEntity.noContent().build();
         }
 
-        @GetMapping("/usuario/{idUsuario}")
-        @Operation(summary = "Consultar preferencias de un usuario", description = "Devuelve la lista de preferencias asociadas a un usuario, incluyendo el nombre de la categoria.")
+        @GetMapping
+        @Operation(summary = "Consultar mis preferencias", description = "Devuelve la lista de preferencias del usuario autenticado, incluyendo el nombre de la categoria.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Lista de preferencias", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PreferenciaResponse.class)))),
                         @ApiResponse(responseCode = "401", description = "Token JWT faltante o invalido", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-                        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
                         @ApiResponse(responseCode = "500", description = "Error interno", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         })
-        public ResponseEntity<List<PreferenciaResponse>> consultarPorUsuario(
-                        @Parameter(description = "ID del usuario del cual consultar preferencias", required = true, in = ParameterIn.PATH) @PathVariable Long idUsuario,
+        public ResponseEntity<List<PreferenciaResponse>> consultarMisPreferencias(
                         Authentication authentication) {
-                List<Preferencia> preferencias = consultarPreferenciasUsuarioUseCase.ejecutar(idUsuario);
+                Long idUsuarioAutenticado = (Long) authentication.getPrincipal();
+                List<Preferencia> preferencias = consultarPreferenciasUsuarioUseCase.ejecutar(idUsuarioAutenticado);
                 Map<Long, String> categorias = categoriaRepositoryPort.findAll().stream()
                                 .collect(Collectors.toMap(Categoria::getIdCategoria, Categoria::getNombreCategoria));
                 List<PreferenciaResponse> respuestas = preferencias.stream()

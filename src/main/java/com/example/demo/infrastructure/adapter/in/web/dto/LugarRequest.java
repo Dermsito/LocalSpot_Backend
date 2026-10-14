@@ -14,6 +14,9 @@ public class LugarRequest {
 
     private String direccion;
 
+    @Size(max = 255, message = "El horario no puede exceder 255 caracteres")
+    private String horario;
+
     private BigDecimal latitud;
 
     private BigDecimal longitud;
@@ -27,27 +30,75 @@ public class LugarRequest {
     @NotNull(message = "La categoria es obligatoria")
     private Long idCategoria;
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public String getDescripcion() {
+        return descripcion;
+    }
 
-    public BigDecimal getLatitud() { return latitud; }
-    public void setLatitud(BigDecimal latitud) { this.latitud = latitud; }
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
 
-    public BigDecimal getLongitud() { return longitud; }
-    public void setLongitud(BigDecimal longitud) { this.longitud = longitud; }
+    public String getDireccion() {
+        return direccion;
+    }
 
-    public BigDecimal getPrecioMin() { return precioMin; }
-    public void setPrecioMin(BigDecimal precioMin) { this.precioMin = precioMin; }
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
 
-    public BigDecimal getPrecioMax() { return precioMax; }
-    public void setPrecioMax(BigDecimal precioMax) { this.precioMax = precioMax; }
+    public String getHorario() {
+        return horario;
+    }
 
-    public Long getIdCategoria() { return idCategoria; }
-    public void setIdCategoria(Long idCategoria) { this.idCategoria = idCategoria; }
+    public void setHorario(String horario) {
+        this.horario = horario;
+    }
+
+    public BigDecimal getLatitud() {
+        return latitud;
+    }
+
+    public void setLatitud(BigDecimal latitud) {
+        this.latitud = latitud;
+    }
+
+    public BigDecimal getLongitud() {
+        return longitud;
+    }
+
+    public void setLongitud(BigDecimal longitud) {
+        this.longitud = longitud;
+    }
+
+    public BigDecimal getPrecioMin() {
+        return precioMin;
+    }
+
+    public void setPrecioMin(BigDecimal precioMin) {
+        this.precioMin = precioMin;
+    }
+
+    public BigDecimal getPrecioMax() {
+        return precioMax;
+    }
+
+    public void setPrecioMax(BigDecimal precioMax) {
+        this.precioMax = precioMax;
+    }
+
+    public Long getIdCategoria() {
+        return idCategoria;
+    }
+
+    public void setIdCategoria(Long idCategoria) {
+        this.idCategoria = idCategoria;
+    }
 }

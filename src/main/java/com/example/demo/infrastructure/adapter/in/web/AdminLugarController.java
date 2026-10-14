@@ -36,7 +36,7 @@ public class AdminLugarController {
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar lugar", description = "Actualiza los datos de un lugar (admin).")
     public ResponseEntity<LugarResponse> actualizar(@PathVariable Long id,
-                                                        @Valid @RequestBody LugarRequest request) {
+            @Valid @RequestBody LugarRequest request) {
         Long idAdmin = SecurityUtils.getCurrentUsuarioId();
         Lugar lugar = administrarLugaresUseCase.actualizar(idAdmin, id, toDomain(request));
         return ResponseEntity.ok(toResponse(lugar));
@@ -53,7 +53,7 @@ public class AdminLugarController {
     @PatchMapping("/{id}/verificacion")
     @Operation(summary = "Cambiar verificacion", description = "Verifica o rechaza un lugar (admin).")
     public ResponseEntity<LugarResponse> cambiarVerificacion(@PathVariable Long id,
-                                                          @Valid @RequestBody VerificacionRequest request) {
+            @Valid @RequestBody VerificacionRequest request) {
         Long idAdmin = SecurityUtils.getCurrentUsuarioId();
         EstadoVerificacion estado = EstadoVerificacion.valueOf(request.getEstado().toUpperCase());
         Lugar lugar = administrarLugaresUseCase.cambiarVerificacion(idAdmin, id, estado);
@@ -65,6 +65,7 @@ public class AdminLugarController {
         lugar.setNombre(request.getNombre());
         lugar.setDescripcion(request.getDescripcion());
         lugar.setDireccion(request.getDireccion());
+        lugar.setHorario(request.getHorario());
         lugar.setLatitud(request.getLatitud());
         lugar.setLongitud(request.getLongitud());
         lugar.setPrecioMin(request.getPrecioMin());
@@ -81,6 +82,7 @@ public class AdminLugarController {
         r.setNombre(lugar.getNombre());
         r.setDescripcion(lugar.getDescripcion());
         r.setDireccion(lugar.getDireccion());
+        r.setHorario(lugar.getHorario());
         r.setLatitud(lugar.getLatitud());
         r.setLongitud(lugar.getLongitud());
         r.setPrecioMin(lugar.getPrecioMin());

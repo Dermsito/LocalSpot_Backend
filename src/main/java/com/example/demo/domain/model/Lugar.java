@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 
 /**
  * Lugar/establecimiento de la plataforma.
- * Puede ser creado por un administrador (idPropietario null) o por un propietario.
+ * Puede ser creado por un administrador (idPropietario null) o por un
+ * propietario.
  */
 public class Lugar {
 
@@ -15,6 +16,7 @@ public class Lugar {
     private String nombre;
     private String descripcion;
     private String direccion;
+    private String horario;
     private BigDecimal latitud;
     private BigDecimal longitud;
     private BigDecimal precioMin;
@@ -72,6 +74,14 @@ public class Lugar {
 
     public void setDireccion(String direccion) {
         this.direccion = direccion;
+    }
+
+    public String getHorario() {
+        return horario;
+    }
+
+    public void setHorario(String horario) {
+        this.horario = horario;
     }
 
     public BigDecimal getLatitud() {

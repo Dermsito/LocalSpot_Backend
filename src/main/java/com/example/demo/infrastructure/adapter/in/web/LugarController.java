@@ -97,6 +97,7 @@ public class LugarController {
         r.setNombre(lugar.getNombre());
         r.setDescripcion(lugar.getDescripcion());
         r.setDireccion(lugar.getDireccion());
+        r.setHorario(lugar.getHorario());
         r.setLatitud(lugar.getLatitud());
         r.setLongitud(lugar.getLongitud());
         r.setPrecioMin(lugar.getPrecioMin());
@@ -118,6 +119,7 @@ public class LugarController {
         r.setNombre(lugar.getNombre());
         r.setDescripcion(lugar.getDescripcion());
         r.setDireccion(lugar.getDireccion());
+        r.setHorario(lugar.getHorario());
         r.setLatitud(lugar.getLatitud());
         r.setLongitud(lugar.getLongitud());
         r.setPrecioMin(lugar.getPrecioMin());

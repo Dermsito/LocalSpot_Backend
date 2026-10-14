@@ -12,6 +12,7 @@ public class LugarResponse {
     private String nombre;
     private String descripcion;
     private String direccion;
+    private String horario;
     private BigDecimal latitud;
     private BigDecimal longitud;
     private BigDecimal precioMin;
@@ -21,48 +22,131 @@ public class LugarResponse {
     private LocalDateTime fechaRegistro;
     private LocalDateTime fechaActualizacion;
 
-    public Long getIdLugar() { return idLugar; }
-    public void setIdLugar(Long idLugar) { this.idLugar = idLugar; }
+    public Long getIdLugar() {
+        return idLugar;
+    }
 
-    public Long getIdCategoria() { return idCategoria; }
-    public void setIdCategoria(Long idCategoria) { this.idCategoria = idCategoria; }
+    public void setIdLugar(Long idLugar) {
+        this.idLugar = idLugar;
+    }
 
-    public String getNombreCategoria() { return nombreCategoria; }
-    public void setNombreCategoria(String nombreCategoria) { this.nombreCategoria = nombreCategoria; }
+    public Long getIdCategoria() {
+        return idCategoria;
+    }
 
-    public Long getIdPropietario() { return idPropietario; }
-    public void setIdPropietario(Long idPropietario) { this.idPropietario = idPropietario; }
+    public void setIdCategoria(Long idCategoria) {
+        this.idCategoria = idCategoria;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNombreCategoria() {
+        return nombreCategoria;
+    }
 
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public void setNombreCategoria(String nombreCategoria) {
+        this.nombreCategoria = nombreCategoria;
+    }
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public Long getIdPropietario() {
+        return idPropietario;
+    }
 
-    public BigDecimal getLatitud() { return latitud; }
-    public void setLatitud(BigDecimal latitud) { this.latitud = latitud; }
+    public void setIdPropietario(Long idPropietario) {
+        this.idPropietario = idPropietario;
+    }
 
-    public BigDecimal getLongitud() { return longitud; }
-    public void setLongitud(BigDecimal longitud) { this.longitud = longitud; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public BigDecimal getPrecioMin() { return precioMin; }
-    public void setPrecioMin(BigDecimal precioMin) { this.precioMin = precioMin; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public BigDecimal getPrecioMax() { return precioMax; }
-    public void setPrecioMax(BigDecimal precioMax) { this.precioMax = precioMax; }
+    public String getDescripcion() {
+        return descripcion;
+    }
 
-    public String getEstadoVerificacion() { return estadoVerificacion; }
-    public void setEstadoVerificacion(String estadoVerificacion) { this.estadoVerificacion = estadoVerificacion; }
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
 
-    public Double getPromedioCalificacion() { return promedioCalificacion; }
-    public void setPromedioCalificacion(Double promedioCalificacion) { this.promedioCalificacion = promedioCalificacion; }
+    public String getDireccion() {
+        return direccion;
+    }
 
-    public LocalDateTime getFechaRegistro() { return fechaRegistro; }
-    public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
 
-    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
-    public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
+    public String getHorario() {
+        return horario;
+    }
+
+    public void setHorario(String horario) {
+        this.horario = horario;
+    }
+
+    public BigDecimal getLatitud() {
+        return latitud;
+    }
+
+    public void setLatitud(BigDecimal latitud) {
+        this.latitud = latitud;
+    }
+
+    public BigDecimal getLongitud() {
+        return longitud;
+    }
+
+    public void setLongitud(BigDecimal longitud) {
+        this.longitud = longitud;
+    }
+
+    public BigDecimal getPrecioMin() {
+        return precioMin;
+    }
+
+    public void setPrecioMin(BigDecimal precioMin) {
+        this.precioMin = precioMin;
+    }
+
+    public BigDecimal getPrecioMax() {
+        return precioMax;
+    }
+
+    public void setPrecioMax(BigDecimal precioMax) {
+        this.precioMax = precioMax;
+    }
+
+    public String getEstadoVerificacion() {
+        return estadoVerificacion;
+    }
+
+    public void setEstadoVerificacion(String estadoVerificacion) {
+        this.estadoVerificacion = estadoVerificacion;
+    }
+
+    public Double getPromedioCalificacion() {
+        return promedioCalificacion;
+    }
+
+    public void setPromedioCalificacion(Double promedioCalificacion) {
+        this.promedioCalificacion = promedioCalificacion;
+    }
+
+    public LocalDateTime getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
+    }
 }

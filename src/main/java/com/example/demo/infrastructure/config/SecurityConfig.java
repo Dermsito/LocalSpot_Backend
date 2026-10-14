@@ -45,9 +45,6 @@ public class SecurityConfig {
                         // Auth publico
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/registro", "/api/usuarios/login",
-                                "/api/usuarios/logout")
-                        .permitAll()
                         // Categorias solo lectura publico
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         // Lugares: busqueda y detalle publicos (solo VERIFICADOS)
