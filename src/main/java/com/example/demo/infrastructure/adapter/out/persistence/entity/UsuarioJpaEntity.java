@@ -1,7 +1,7 @@
 package com.example.demo.infrastructure.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "usuarios")
@@ -25,8 +25,11 @@ public class UsuarioJpaEntity {
     @Column(name = "tipo_usuario", length = 20)
     private TipoUsuarioJpa tipoUsuario;
 
+    @Column(name = "id_rol")
+    private Short rolId;
+
     @Column(name = "fecha_registro")
-    private LocalDate fechaRegistro;
+    private LocalDateTime fechaRegistro;
 
     public enum TipoUsuarioJpa {
         FINAL, ADMINISTRADOR, PROPIETARIO
@@ -72,11 +75,19 @@ public class UsuarioJpaEntity {
         this.tipoUsuario = tipoUsuario;
     }
 
-    public LocalDate getFechaRegistro() {
+    public Short getRolId() {
+        return rolId;
+    }
+
+    public void setRolId(Short rolId) {
+        this.rolId = rolId;
+    }
+
+    public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }
 
-    public void setFechaRegistro(LocalDate fechaRegistro) {
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
     }
 }

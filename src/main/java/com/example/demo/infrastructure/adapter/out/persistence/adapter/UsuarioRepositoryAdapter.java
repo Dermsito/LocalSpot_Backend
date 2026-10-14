@@ -44,8 +44,8 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
     private Usuario toDomain(UsuarioJpaEntity entity) {
         Usuario.TipoUsuario tipo = entity.getTipoUsuario() != null
                 ? Usuario.TipoUsuario.valueOf(entity.getTipoUsuario().name())
-                : null;
-        return new Usuario(
+                : Usuario.TipoUsuario.fromRolId(entity.getRolId());
+        Usuario usuario = new Usuario(
                 entity.getIdUsuario(),
                 entity.getNombre(),
                 entity.getCorreo(),
@@ -53,6 +53,10 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
                 tipo,
                 entity.getFechaRegistro()
         );
+        if (entity.getRolId() != null) {
+            usuario.setRolId(entity.getRolId());
+        }
+        return usuario;
     }
 
     private UsuarioJpaEntity toEntity(Usuario usuario) {
@@ -64,6 +68,7 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
         if (usuario.getTipoUsuario() != null) {
             entity.setTipoUsuario(UsuarioJpaEntity.TipoUsuarioJpa.valueOf(usuario.getTipoUsuario().name()));
         }
+        entity.setRolId(usuario.getRolId());
         entity.setFechaRegistro(usuario.getFechaRegistro());
         return entity;
     }

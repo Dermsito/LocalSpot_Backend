@@ -1,7 +1,7 @@
 package com.example.demo.infrastructure.adapter.in.web.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class UsuarioResponse {
 
@@ -9,13 +9,13 @@ public class UsuarioResponse {
     private String nombre;
     private String correo;
     private String tipoUsuario;
-    private LocalDate fechaRegistro;
+    private LocalDateTime fechaRegistro;
 
     public UsuarioResponse() {
     }
 
     public UsuarioResponse(Long idUsuario, String nombre, String correo,
-                           String tipoUsuario, LocalDate fechaRegistro) {
+                           String tipoUsuario, LocalDateTime fechaRegistro) {
         this.idUsuario = idUsuario;
         this.nombre = nombre;
         this.correo = correo;
@@ -55,11 +55,11 @@ public class UsuarioResponse {
         this.tipoUsuario = tipoUsuario;
     }
 
-    public LocalDate getFechaRegistro() {
+    public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }
 
-    public void setFechaRegistro(LocalDate fechaRegistro) {
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
     }
 }

@@ -44,6 +44,21 @@ public class CategoriaRepositoryAdapter implements CategoriaRepositoryPort {
         return categoriaJpaRepository.existsById(idCategoria);
     }
 
+    @Override
+    public void deleteById(Long idCategoria) {
+        categoriaJpaRepository.deleteById(idCategoria);
+    }
+
+    @Override
+    public boolean existsByNombreCategoria(String nombreCategoria) {
+        return categoriaJpaRepository.existsByNombreCategoria(nombreCategoria);
+    }
+
+    @Override
+    public boolean existsByNombreCategoriaAndIdNot(String nombreCategoria, Long idCategoria) {
+        return categoriaJpaRepository.existsByNombreCategoriaAndIdNot(nombreCategoria, idCategoria);
+    }
+
     private Categoria toDomain(CategoriaJpaEntity entity) {
         return new Categoria(entity.getIdCategoria(), entity.getNombreCategoria());
     }

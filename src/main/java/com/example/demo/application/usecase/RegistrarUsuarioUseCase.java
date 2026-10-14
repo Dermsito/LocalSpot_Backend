@@ -5,7 +5,7 @@ import com.example.demo.domain.model.Usuario;
 import com.example.demo.domain.port.PasswordEncoderPort;
 import com.example.demo.domain.port.UsuarioRepositoryPort;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class RegistrarUsuarioUseCase {
 
@@ -31,7 +31,7 @@ public class RegistrarUsuarioUseCase {
         usuario.setCorreo(correo);
         usuario.setContrasenaHash(hash);
         usuario.setTipoUsuario(tipoUsuario != null ? tipoUsuario : Usuario.TipoUsuario.FINAL);
-        usuario.setFechaRegistro(LocalDate.now());
+        usuario.setFechaRegistro(LocalDateTime.now());
 
         return usuarioRepositoryPort.save(usuario);
     }

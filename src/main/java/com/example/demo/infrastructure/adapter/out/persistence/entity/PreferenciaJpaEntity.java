@@ -18,7 +18,7 @@ public class PreferenciaJpaEntity {
     @Column(name = "id_categoria", nullable = false)
     private Long idCategoria;
 
-    @Column(name = "presupuesto_max", precision = 10, scale = 2)
+    @Column(name = "presupuesto_max", precision = 12, scale = 2)
     private BigDecimal presupuestoMax;
 
     public Long getIdPreferencia() {

@@ -9,5 +9,8 @@ public interface CategoriaRepositoryPort {
     Optional<Categoria> findById(Long idCategoria);
     List<Categoria> findAll();
     Categoria save(Categoria categoria);
+    void deleteById(Long idCategoria);
     boolean existsById(Long idCategoria);
+    boolean existsByNombreCategoria(String nombreCategoria);
+    boolean existsByNombreCategoriaAndIdNot(String nombreCategoria, Long idCategoria);
 }
