@@ -7,6 +7,8 @@ import com.example.demo.domain.port.AuditoriaPort;
 import com.example.demo.domain.port.CategoriaRepositoryPort;
 import com.example.demo.domain.port.LugarRepositoryPort;
 
+import java.util.List;
+
 /**
  * RF-11: CRUD de categorias por administrador.
  * Nombre unico; no eliminar si esta en uso por algun lugar.
@@ -23,6 +25,10 @@ public class AdministrarCategoriasUseCase {
         this.categoriaRepositoryPort = categoriaRepositoryPort;
         this.lugarRepositoryPort = lugarRepositoryPort;
         this.auditoriaPort = auditoriaPort;
+    }
+
+    public List<Categoria> listar() {
+        return categoriaRepositoryPort.findAll();
     }
 
     public Categoria crear(Long idAdmin, String nombre) {

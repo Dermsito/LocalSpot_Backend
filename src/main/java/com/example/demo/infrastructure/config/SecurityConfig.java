@@ -43,7 +43,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Auth publico
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout")
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login",
+                                "/api/auth/logout", "/api/auth/verificar-correo",
+                                "/api/auth/reenviar-verificacion")
                         .permitAll()
                         // Categorias solo lectura publico
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
@@ -67,6 +69,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/establecimientos/**").hasRole("PROPIETARIO")
                         // Resto requiere autenticacion
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> res.sendError(401, "Autenticacion requerida"))
+                        .accessDeniedHandler((req, res, e) -> res.sendError(403, "Acceso denegado")))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

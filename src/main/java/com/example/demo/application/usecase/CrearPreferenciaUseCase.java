@@ -1,6 +1,7 @@
 package com.example.demo.application.usecase;
 
 import com.example.demo.domain.exception.CategoriaNoEncontradaException;
+import com.example.demo.domain.exception.PreferenciaDuplicadaException;
 import com.example.demo.domain.exception.UsuarioNoEncontradoException;
 import com.example.demo.domain.model.Preferencia;
 import com.example.demo.domain.port.CategoriaRepositoryPort;
@@ -8,7 +9,6 @@ import com.example.demo.domain.port.PreferenciaRepositoryPort;
 import com.example.demo.domain.port.UsuarioRepositoryPort;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 public class CrearPreferenciaUseCase {
 
@@ -33,13 +33,9 @@ public class CrearPreferenciaUseCase {
             throw new CategoriaNoEncontradaException("Categoria no encontrada");
         }
 
-        Optional<Preferencia> existente = preferenciaRepositoryPort
-                .findByIdUsuarioAndIdCategoria(idUsuario, idCategoria);
-
-        if (existente.isPresent()) {
-            Preferencia p = existente.get();
-            p.setPresupuestoMax(presupuestoMax);
-            return preferenciaRepositoryPort.save(p);
+        if (preferenciaRepositoryPort.findByIdUsuarioAndIdCategoria(idUsuario, idCategoria).isPresent()) {
+            throw new PreferenciaDuplicadaException(
+                    "Ya existe una preferencia para la categoria con id: " + idCategoria);
         }
 
         Preferencia nueva = new Preferencia();

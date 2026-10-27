@@ -5,15 +5,18 @@ import com.example.demo.domain.exception.CalificacionNoEncontradaException;
 import com.example.demo.domain.exception.CategoriaEnUsoException;
 import com.example.demo.domain.exception.CategoriaNoEncontradaException;
 import com.example.demo.domain.exception.CorreoDuplicadoException;
+import com.example.demo.domain.exception.CorreoNoVerificadoException;
 import com.example.demo.domain.exception.CredencialesInvalidasException;
 import com.example.demo.domain.exception.EstadoReporteInvalidoException;
 import com.example.demo.domain.exception.FavoritoDuplicadoException;
 import com.example.demo.domain.exception.LugarNoEncontradoException;
 import com.example.demo.domain.exception.OperacionNoAutorizadaException;
+import com.example.demo.domain.exception.PreferenciaDuplicadaException;
 import com.example.demo.domain.exception.PreferenciaNoEncontradaException;
 import com.example.demo.domain.exception.RecomendacionSinPreferenciasException;
 import com.example.demo.domain.exception.ReporteDuplicadoException;
 import com.example.demo.domain.exception.ReporteNoEncontradoException;
+import com.example.demo.domain.exception.TokenVerificacionInvalidoException;
 import com.example.demo.domain.exception.UsuarioNoEncontradoException;
 import com.example.demo.domain.exception.VerificacionInvalidaException;
 import com.example.demo.infrastructure.adapter.in.web.dto.ErrorResponse;
@@ -39,7 +42,7 @@ public class GlobalExceptionHandler {
     // 409 Conflict
     @ExceptionHandler({ CorreoDuplicadoException.class, FavoritoDuplicadoException.class,
             CalificacionDuplicadaException.class, ReporteDuplicadoException.class,
-            CategoriaEnUsoException.class })
+            CategoriaEnUsoException.class, PreferenciaDuplicadaException.class })
     public ResponseEntity<ErrorResponse> handleConflicto(RuntimeException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
@@ -51,8 +54,8 @@ public class GlobalExceptionHandler {
     }
 
     // 403 Forbidden
-    @ExceptionHandler(OperacionNoAutorizadaException.class)
-    public ResponseEntity<ErrorResponse> handleNoAutorizado(OperacionNoAutorizadaException ex,
+    @ExceptionHandler({ OperacionNoAutorizadaException.class, CorreoNoVerificadoException.class })
+    public ResponseEntity<ErrorResponse> handleNoAutorizado(RuntimeException ex,
             HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
@@ -67,7 +70,8 @@ public class GlobalExceptionHandler {
 
     // 400 Bad Request - validaciones de negocio
     @ExceptionHandler({ EstadoReporteInvalidoException.class, VerificacionInvalidaException.class,
-            RecomendacionSinPreferenciasException.class, IllegalArgumentException.class })
+            RecomendacionSinPreferenciasException.class, TokenVerificacionInvalidoException.class,
+            IllegalArgumentException.class })
     public ResponseEntity<ErrorResponse> handleSolicitudInvalida(RuntimeException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }

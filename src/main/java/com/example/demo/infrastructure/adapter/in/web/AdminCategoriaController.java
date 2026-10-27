@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/admin/categorias")
 @Tag(name = "Admin Categorias", description = "Administrador: CRUD de categorias")
@@ -21,6 +24,16 @@ public class AdminCategoriaController {
 
     public AdminCategoriaController(AdministrarCategoriasUseCase administrarCategoriasUseCase) {
         this.administrarCategoriasUseCase = administrarCategoriasUseCase;
+    }
+
+    @GetMapping
+    @Operation(summary = "Listar categorias", description = "Lista todas las categorias (admin).")
+    public ResponseEntity<List<CategoriaResponse>> listar() {
+        List<Categoria> categorias = administrarCategoriasUseCase.listar();
+        List<CategoriaResponse> response = categorias.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -34,7 +47,7 @@ public class AdminCategoriaController {
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar categoria", description = "Actualiza el nombre de una categoria (admin).")
     public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Long id,
-                                                            @Valid @RequestBody CategoriaRequest request) {
+            @Valid @RequestBody CategoriaRequest request) {
         Long idAdmin = SecurityUtils.getCurrentUsuarioId();
         Categoria categoria = administrarCategoriasUseCase.actualizar(idAdmin, id, request.getNombreCategoria());
         return ResponseEntity.ok(toResponse(categoria));

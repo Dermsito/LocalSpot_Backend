@@ -3,21 +3,17 @@ package com.example.demo.infrastructure.adapter.in.web.dto;
 public class LoginResponse {
 
     private String token;
-    private String tipoToken = "Bearer";
-    private Long expiracionMs;
-    private Long id;
-    private String nombre;
-    private String rol;
+    private String tokenType = "Bearer";
+    private Long expiresIn;
+    private UsuarioInfo usuario;
 
     public LoginResponse() {
     }
 
-    public LoginResponse(String token, Long expiracionMs, Long id, String nombre, String rol) {
+    public LoginResponse(String token, Long expiresIn, Long id, String nombre, String rol) {
         this.token = token;
-        this.expiracionMs = expiracionMs;
-        this.id = id;
-        this.nombre = nombre;
-        this.rol = rol;
+        this.expiresIn = expiresIn;
+        this.usuario = new UsuarioInfo(id, nombre, rol);
     }
 
     public String getToken() {
@@ -28,43 +24,66 @@ public class LoginResponse {
         this.token = token;
     }
 
-    public String getTipoToken() {
-        return tipoToken;
+    public String getTokenType() {
+        return tokenType;
     }
 
-    public void setTipoToken(String tipoToken) {
-        this.tipoToken = tipoToken;
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
     }
 
-    public Long getExpiracionMs() {
-        return expiracionMs;
+    public Long getExpiresIn() {
+        return expiresIn;
     }
 
-    public void setExpiracionMs(Long expiracionMs) {
-        this.expiracionMs = expiracionMs;
+    public void setExpiresIn(Long expiresIn) {
+        this.expiresIn = expiresIn;
     }
 
-    public Long getId() {
-        return id;
+    public UsuarioInfo getUsuario() {
+        return usuario;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUsuario(UsuarioInfo usuario) {
+        this.usuario = usuario;
     }
 
-    public String getNombre() {
-        return nombre;
-    }
+    public static class UsuarioInfo {
+        private Long id;
+        private String nombre;
+        private String rol;
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
+        public UsuarioInfo() {
+        }
 
-    public String getRol() {
-        return rol;
-    }
+        public UsuarioInfo(Long id, String nombre, String rol) {
+            this.id = id;
+            this.nombre = nombre;
+            this.rol = rol;
+        }
 
-    public void setRol(String rol) {
-        this.rol = rol;
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getNombre() {
+            return nombre;
+        }
+
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public String getRol() {
+            return rol;
+        }
+
+        public void setRol(String rol) {
+            this.rol = rol;
+        }
     }
 }

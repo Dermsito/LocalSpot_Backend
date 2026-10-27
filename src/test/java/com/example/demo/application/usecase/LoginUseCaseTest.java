@@ -1,5 +1,6 @@
 package com.example.demo.application.usecase;
 
+import com.example.demo.domain.exception.CorreoNoVerificadoException;
 import com.example.demo.domain.exception.CredencialesInvalidasException;
 import com.example.demo.domain.model.Usuario;
 import com.example.demo.domain.port.JwtServicePort;
@@ -39,6 +40,7 @@ class LoginUseCaseTest {
         u.setNombre("Test");
         u.setContrasenaHash("hash");
         u.setTipoUsuario(Usuario.TipoUsuario.ADMINISTRADOR);
+        u.setVerificado(true);
         when(usuarioRepositoryPort.findByCorreo("admin@test.com")).thenReturn(Optional.of(u));
         when(passwordEncoderPort.matches("pass1234", "hash")).thenReturn(true);
         when(jwtServicePort.generateToken(u)).thenReturn("jwt-token");
@@ -49,6 +51,20 @@ class LoginUseCaseTest {
         assertThat(resultado.token()).isEqualTo("jwt-token");
         assertThat(resultado.id()).isEqualTo(1L);
         assertThat(resultado.rol()).isEqualTo("ADMINISTRADOR");
+    }
+
+    @Test
+    void ejecutar_cuandoCorreoSinVerificar_debeLanzarExcepcion() {
+        Usuario u = new Usuario();
+        u.setIdUsuario(1L);
+        u.setContrasenaHash("hash");
+        u.setTipoUsuario(Usuario.TipoUsuario.FINAL);
+        u.setVerificado(false);
+        when(usuarioRepositoryPort.findByCorreo("nuevo@test.com")).thenReturn(Optional.of(u));
+        when(passwordEncoderPort.matches("pass1234", "hash")).thenReturn(true);
+
+        assertThatThrownBy(() -> loginUseCase.ejecutar("nuevo@test.com", "pass1234"))
+                .isInstanceOf(CorreoNoVerificadoException.class);
     }
 
     @Test

@@ -56,6 +56,8 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
         if (entity.getRolId() != null) {
             usuario.setRolId(entity.getRolId());
         }
+        usuario.setVerificado(entity.getVerificado());
+        usuario.setFechaVerificacion(entity.getFechaVerificacion());
         return usuario;
     }
 
@@ -70,6 +72,8 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
         }
         entity.setRolId(usuario.getRolId());
         entity.setFechaRegistro(usuario.getFechaRegistro());
+        entity.setVerificado(usuario.getVerificado() != null ? usuario.getVerificado() : Boolean.FALSE);
+        entity.setFechaVerificacion(usuario.getFechaVerificacion());
         return entity;
     }
 }

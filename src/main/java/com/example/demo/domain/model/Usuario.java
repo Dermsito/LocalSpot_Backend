@@ -11,12 +11,15 @@ public class Usuario {
     private TipoUsuario tipoUsuario;
     private Short rolId;
     private LocalDateTime fechaRegistro;
+    private Boolean verificado;
+    private LocalDateTime fechaVerificacion;
 
     public enum TipoUsuario {
         FINAL, ADMINISTRADOR, PROPIETARIO;
 
         public static TipoUsuario fromRolId(Short rolId) {
-            if (rolId == null) return FINAL;
+            if (rolId == null)
+                return FINAL;
             return switch (rolId) {
                 case 1 -> ADMINISTRADOR;
                 case 3 -> PROPIETARIO;
@@ -37,7 +40,7 @@ public class Usuario {
     }
 
     public Usuario(Long idUsuario, String nombre, String correo, String contrasenaHash,
-                   TipoUsuario tipoUsuario, LocalDateTime fechaRegistro) {
+            TipoUsuario tipoUsuario, LocalDateTime fechaRegistro) {
         this.idUsuario = idUsuario;
         this.nombre = nombre;
         this.correo = correo;
@@ -103,5 +106,29 @@ public class Usuario {
 
     public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
+    }
+
+    public Boolean getVerificado() {
+        return verificado;
+    }
+
+    public void setVerificado(Boolean verificado) {
+        this.verificado = verificado;
+    }
+
+    /**
+     * Indica si el correo del usuario fue verificado (null se interpreta como no
+     * verificado).
+     */
+    public boolean isVerificado() {
+        return Boolean.TRUE.equals(verificado);
+    }
+
+    public LocalDateTime getFechaVerificacion() {
+        return fechaVerificacion;
+    }
+
+    public void setFechaVerificacion(LocalDateTime fechaVerificacion) {
+        this.fechaVerificacion = fechaVerificacion;
     }
 }

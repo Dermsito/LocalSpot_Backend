@@ -3,8 +3,11 @@ package com.example.demo.infrastructure.adapter.in.web;
 import com.example.demo.application.usecase.AdministrarLugaresUseCase;
 import com.example.demo.domain.model.EstadoVerificacion;
 import com.example.demo.domain.model.Lugar;
+import com.example.demo.domain.model.Pagina;
+import com.example.demo.domain.model.Paginacion;
 import com.example.demo.infrastructure.adapter.in.web.dto.LugarRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.LugarResponse;
+import com.example.demo.infrastructure.adapter.in.web.dto.PaginaResponse;
 import com.example.demo.infrastructure.adapter.in.web.dto.VerificacionRequest;
 import com.example.demo.infrastructure.config.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +16,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/lugares")
@@ -23,6 +29,20 @@ public class AdminLugarController {
 
     public AdminLugarController(AdministrarLugaresUseCase administrarLugaresUseCase) {
         this.administrarLugaresUseCase = administrarLugaresUseCase;
+    }
+
+    @GetMapping
+    @Operation(summary = "Listar lugares", description = "Lista todos los lugares con paginacion (admin).")
+    public ResponseEntity<PaginaResponse<LugarResponse>> listar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pagina<Lugar> pagina = administrarLugaresUseCase.listar(new Paginacion(page, size));
+        List<LugarResponse> content = pagina.content().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+        PaginaResponse<LugarResponse> response = new PaginaResponse<>(
+                content, pagina.page(), pagina.size(), pagina.totalElements(), pagina.totalPages());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping

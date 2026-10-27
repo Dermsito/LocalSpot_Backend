@@ -1,5 +1,6 @@
 package com.example.demo.application.usecase;
 
+import com.example.demo.domain.exception.CorreoNoVerificadoException;
 import com.example.demo.domain.exception.CredencialesInvalidasException;
 import com.example.demo.domain.model.Usuario;
 import com.example.demo.domain.port.JwtServicePort;
@@ -13,8 +14,8 @@ public class LoginUseCase {
     private final JwtServicePort jwtServicePort;
 
     public LoginUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                        PasswordEncoderPort passwordEncoderPort,
-                        JwtServicePort jwtServicePort) {
+            PasswordEncoderPort passwordEncoderPort,
+            JwtServicePort jwtServicePort) {
         this.usuarioRepositoryPort = usuarioRepositoryPort;
         this.passwordEncoderPort = passwordEncoderPort;
         this.jwtServicePort = jwtServicePort;
@@ -30,6 +31,11 @@ public class LoginUseCase {
 
         if (!passwordEncoderPort.matches(contrasenaPlana, usuario.getContrasenaHash())) {
             throw new CredencialesInvalidasException("Credenciales inválidas");
+        }
+
+        if (!usuario.isVerificado()) {
+            throw new CorreoNoVerificadoException(
+                    "Debes verificar tu correo antes de iniciar sesión");
         }
 
         String token = jwtServicePort.generateToken(usuario);

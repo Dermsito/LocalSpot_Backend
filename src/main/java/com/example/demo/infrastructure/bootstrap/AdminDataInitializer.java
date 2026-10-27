@@ -56,6 +56,8 @@ public class AdminDataInitializer implements ApplicationRunner {
         admin.setContrasenaHash(passwordEncoder.encode(adminPassword));
         admin.setTipoUsuario(Usuario.TipoUsuario.ADMINISTRADOR);
         admin.setFechaRegistro(LocalDateTime.now());
+        admin.setVerificado(true);
+        admin.setFechaVerificacion(LocalDateTime.now());
 
         usuarioRepositoryPort.save(admin);
         log.info("Usuario administrador creado exitosamente: {}", adminEmail);

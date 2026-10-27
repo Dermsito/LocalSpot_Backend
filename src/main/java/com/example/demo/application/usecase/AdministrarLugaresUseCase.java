@@ -5,6 +5,8 @@ import com.example.demo.domain.exception.LugarNoEncontradoException;
 import com.example.demo.domain.exception.VerificacionInvalidaException;
 import com.example.demo.domain.model.EstadoVerificacion;
 import com.example.demo.domain.model.Lugar;
+import com.example.demo.domain.model.Pagina;
+import com.example.demo.domain.model.Paginacion;
 import com.example.demo.domain.port.AuditoriaPort;
 import com.example.demo.domain.port.CategoriaRepositoryPort;
 import com.example.demo.domain.port.FotoLugarRepositoryPort;
@@ -32,6 +34,11 @@ public class AdministrarLugaresUseCase {
         this.categoriaRepositoryPort = categoriaRepositoryPort;
         this.fotoLugarRepositoryPort = fotoLugarRepositoryPort;
         this.auditoriaPort = auditoriaPort;
+    }
+
+    public Pagina<Lugar> listar(Paginacion paginacion) {
+        return lugarRepositoryPort.buscarConFiltros(null, null, null, null, null,
+                null, null, null, paginacion);
     }
 
     public Lugar crear(Long idAdmin, Lugar datos) {

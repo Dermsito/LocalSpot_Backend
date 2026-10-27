@@ -1,6 +1,7 @@
 package com.example.demo.application.usecase;
 
 import com.example.demo.domain.exception.CategoriaNoEncontradaException;
+import com.example.demo.domain.exception.PreferenciaDuplicadaException;
 import com.example.demo.domain.exception.UsuarioNoEncontradoException;
 import com.example.demo.domain.model.Preferencia;
 import com.example.demo.domain.model.Usuario;
@@ -69,7 +70,7 @@ class CrearPreferenciaUseCaseTest {
     }
 
     @Test
-    void ejecutar_cuandoPreferenciaExiste_debeActualizarPresupuesto() {
+    void ejecutar_cuandoPreferenciaExiste_debeLanzarExcepcionDuplicada() {
         when(usuarioRepositoryPort.findById(1L)).thenReturn(Optional.of(new Usuario()));
         when(categoriaRepositoryPort.existsById(1L)).thenReturn(true);
         Preferencia existente = new Preferencia();
@@ -78,11 +79,9 @@ class CrearPreferenciaUseCaseTest {
         existente.setPresupuestoMax(new BigDecimal("10000"));
         when(preferenciaRepositoryPort.findByIdUsuarioAndIdCategoria(1L, 1L))
                 .thenReturn(Optional.of(existente));
-        when(preferenciaRepositoryPort.save(any(Preferencia.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Preferencia p = crearPreferenciaUseCase.ejecutar(1L, 1L, new BigDecimal("80000"));
-
-        assertThat(p.getPresupuestoMax()).isEqualByComparingTo("80000");
-        verify(preferenciaRepositoryPort, times(1)).save(any());
+        assertThatThrownBy(() -> crearPreferenciaUseCase.ejecutar(1L, 1L, new BigDecimal("80000")))
+                .isInstanceOf(PreferenciaDuplicadaException.class);
+        verify(preferenciaRepositoryPort, never()).save(any());
     }
 }

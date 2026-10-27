@@ -14,11 +14,14 @@ import com.example.demo.application.usecase.GestionarFavoritosUseCase;
 import com.example.demo.application.usecase.GestionarReportesUseCase;
 import com.example.demo.application.usecase.LoginUseCase;
 import com.example.demo.application.usecase.ObtenerDetalleLugarUseCase;
+import com.example.demo.application.usecase.ReenviarVerificacionUseCase;
 import com.example.demo.application.usecase.RegistrarUsuarioUseCase;
+import com.example.demo.application.usecase.VerificarCorreoUseCase;
 import com.example.demo.domain.port.AiRecommendationPort;
 import com.example.demo.domain.port.AuditoriaPort;
 import com.example.demo.domain.port.CalificacionRepositoryPort;
 import com.example.demo.domain.port.CategoriaRepositoryPort;
+import com.example.demo.domain.port.EmailPort;
 import com.example.demo.domain.port.FavoritoRepositoryPort;
 import com.example.demo.domain.port.FotoLugarRepositoryPort;
 import com.example.demo.domain.port.JwtServicePort;
@@ -27,17 +30,43 @@ import com.example.demo.domain.port.PasswordEncoderPort;
 import com.example.demo.domain.port.PreferenciaRepositoryPort;
 import com.example.demo.domain.port.RecomendacionRepositoryPort;
 import com.example.demo.domain.port.ReporteRepositoryPort;
+import com.example.demo.domain.port.TokenVerificacionRepositoryPort;
 import com.example.demo.domain.port.UsuarioRepositoryPort;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class UseCaseConfig {
 
+    @Value("${localspot.verificacion.expiracion-minutos:1440}")
+    private long expiracionMinutosVerificacion;
+
+    @Value("${localspot.verificacion.base-url:http://localhost:3000}")
+    private String baseUrlVerificacion;
+
     @Bean
     public RegistrarUsuarioUseCase registrarUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            PasswordEncoderPort passwordEncoderPort) {
-        return new RegistrarUsuarioUseCase(usuarioRepositoryPort, passwordEncoderPort);
+            PasswordEncoderPort passwordEncoderPort,
+            TokenVerificacionRepositoryPort tokenVerificacionRepositoryPort,
+            EmailPort emailPort) {
+        return new RegistrarUsuarioUseCase(usuarioRepositoryPort, passwordEncoderPort,
+                tokenVerificacionRepositoryPort, emailPort,
+                expiracionMinutosVerificacion, baseUrlVerificacion);
+    }
+
+    @Bean
+    public VerificarCorreoUseCase verificarCorreoUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+            TokenVerificacionRepositoryPort tokenVerificacionRepositoryPort) {
+        return new VerificarCorreoUseCase(usuarioRepositoryPort, tokenVerificacionRepositoryPort);
+    }
+
+    @Bean
+    public ReenviarVerificacionUseCase reenviarVerificacionUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+            TokenVerificacionRepositoryPort tokenVerificacionRepositoryPort,
+            EmailPort emailPort) {
+        return new ReenviarVerificacionUseCase(usuarioRepositoryPort, tokenVerificacionRepositoryPort,
+                emailPort, expiracionMinutosVerificacion, baseUrlVerificacion);
     }
 
     @Bean

@@ -8,6 +8,7 @@ import com.example.demo.domain.model.FotoLugar;
 import com.example.demo.domain.model.Lugar;
 import com.example.demo.domain.model.Pagina;
 import com.example.demo.domain.model.Paginacion;
+import com.example.demo.domain.port.CalificacionRepositoryPort;
 import com.example.demo.domain.port.CategoriaRepositoryPort;
 import com.example.demo.domain.port.GeocodingPort;
 import com.example.demo.infrastructure.adapter.in.web.dto.CalificacionResponse;
@@ -33,15 +34,18 @@ public class LugarController {
     private final ObtenerDetalleLugarUseCase obtenerDetalleLugarUseCase;
     private final GeocodingPort geocodingPort;
     private final CategoriaRepositoryPort categoriaRepositoryPort;
+    private final CalificacionRepositoryPort calificacionRepositoryPort;
 
     public LugarController(BuscarLugaresUseCase buscarLugaresUseCase,
             ObtenerDetalleLugarUseCase obtenerDetalleLugarUseCase,
             GeocodingPort geocodingPort,
-            CategoriaRepositoryPort categoriaRepositoryPort) {
+            CategoriaRepositoryPort categoriaRepositoryPort,
+            CalificacionRepositoryPort calificacionRepositoryPort) {
         this.buscarLugaresUseCase = buscarLugaresUseCase;
         this.obtenerDetalleLugarUseCase = obtenerDetalleLugarUseCase;
         this.geocodingPort = geocodingPort;
         this.categoriaRepositoryPort = categoriaRepositoryPort;
+        this.calificacionRepositoryPort = calificacionRepositoryPort;
     }
 
     @GetMapping
@@ -108,6 +112,8 @@ public class LugarController {
         // Nombre de categoria
         categoriaRepositoryPort.findById(lugar.getIdCategoria())
                 .ifPresent(c -> r.setNombreCategoria(c.getNombreCategoria()));
+        // Promedio de calificaciones
+        r.setPromedioCalificacion(calificacionRepositoryPort.calcularPromedioByLugarId(lugar.getIdLugar()));
         return r;
     }
 

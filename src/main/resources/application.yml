@@ -32,6 +32,18 @@ spring:
     init:
       mode: never
 
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+
 server:
   port: ${PORT:8080}
   shutdown: graceful
@@ -70,12 +82,23 @@ localspot:
     password: ${ADMIN_PASSWORD:}
   storage:
     upload-dir: ${UPLOAD_DIR:./uploads}
+  verificacion:
+    expiracion-minutos: ${VERIFICACION_EXPIRACION_MINUTOS:1440}
+    base-url: ${APP_BASE_URL:http://localhost:3000}
+    remitente: ${MAIL_FROM:no-reply@localspot.test}
   integrations:
     ai:
       api-key: ${AI_API_KEY:}
-      api-url: ${AI_API_URL:}
+      api-url: ${AI_API_URL:https://generativelanguage.googleapis.com}
+      model: ${AI_MODEL:gemini-1.5-flash}
     maps:
       api-key: ${MAPS_API_KEY:}
+      api-url: ${MAPS_API_URL:https://maps.googleapis.com/maps/api/geocode/json}
+      # Centro por defecto cuando no se puede geocodificar (Fusagasuga, Colombia).
+      # Configurable para operar en cualquier ciudad sin recompilar.
+      default-lat: ${MAPS_DEFAULT_LAT:4.3372}
+      default-lon: ${MAPS_DEFAULT_LON:-74.3640}
+      default-radio-km: ${MAPS_DEFAULT_RADIO_KM:5}
 
 resilience4j:
   circuitbreaker:

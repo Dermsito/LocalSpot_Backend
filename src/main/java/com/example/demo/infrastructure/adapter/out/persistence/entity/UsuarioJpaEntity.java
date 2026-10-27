@@ -31,6 +31,12 @@ public class UsuarioJpaEntity {
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro;
 
+    @Column(name = "verificado", nullable = false)
+    private Boolean verificado = Boolean.FALSE;
+
+    @Column(name = "fecha_verificacion")
+    private LocalDateTime fechaVerificacion;
+
     public enum TipoUsuarioJpa {
         FINAL, ADMINISTRADOR, PROPIETARIO
     }
@@ -89,5 +95,21 @@ public class UsuarioJpaEntity {
 
     public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
+    }
+
+    public Boolean getVerificado() {
+        return verificado;
+    }
+
+    public void setVerificado(Boolean verificado) {
+        this.verificado = verificado;
+    }
+
+    public LocalDateTime getFechaVerificacion() {
+        return fechaVerificacion;
+    }
+
+    public void setFechaVerificacion(LocalDateTime fechaVerificacion) {
+        this.fechaVerificacion = fechaVerificacion;
     }
 }
