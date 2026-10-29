@@ -37,6 +37,8 @@
 		<sonar.projectKey>LocalSpot-Backend</sonar.projectKey>
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/model/**,**/adapter/out/ai/**,**/adapter/in/web/**</sonar.cpd.exclusions>
 		<sonar.projectName>LocalSpot Backend</sonar.projectName>
+		<sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.coverage.exclusions>**/dto/**,**/entity/**,**/model/**,**/config/**,**/DemoApplication.java</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
