@@ -16,6 +16,7 @@ import com.example.demo.domain.exception.PreferenciaNoEncontradaException;
 import com.example.demo.domain.exception.RecomendacionSinPreferenciasException;
 import com.example.demo.domain.exception.ReporteDuplicadoException;
 import com.example.demo.domain.exception.ReporteNoEncontradoException;
+import com.example.demo.domain.exception.TokenRecuperacionInvalidoException;
 import com.example.demo.domain.exception.TokenVerificacionInvalidoException;
 import com.example.demo.domain.exception.UsuarioNoEncontradoException;
 import com.example.demo.domain.exception.VerificacionInvalidaException;
@@ -71,6 +72,7 @@ public class GlobalExceptionHandler {
     // 400 Bad Request - validaciones de negocio
     @ExceptionHandler({ EstadoReporteInvalidoException.class, VerificacionInvalidaException.class,
             RecomendacionSinPreferenciasException.class, TokenVerificacionInvalidoException.class,
+            TokenRecuperacionInvalidoException.class,
             IllegalArgumentException.class })
     public ResponseEntity<ErrorResponse> handleSolicitudInvalida(RuntimeException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);

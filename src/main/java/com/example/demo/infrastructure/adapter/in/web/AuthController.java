@@ -1,16 +1,22 @@
 package com.example.demo.infrastructure.adapter.in.web;
 
+import com.example.demo.application.usecase.LoginGoogleUseCase;
 import com.example.demo.application.usecase.LoginUseCase;
 import com.example.demo.application.usecase.ReenviarVerificacionUseCase;
 import com.example.demo.application.usecase.RegistrarUsuarioUseCase;
+import com.example.demo.application.usecase.RestablecerContrasenaUseCase;
+import com.example.demo.application.usecase.SolicitarRecuperacionContrasenaUseCase;
 import com.example.demo.application.usecase.VerificarCorreoUseCase;
 import com.example.demo.domain.model.Usuario;
 import com.example.demo.infrastructure.adapter.in.web.dto.ErrorResponse;
+import com.example.demo.infrastructure.adapter.in.web.dto.GoogleAuthRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.LoginRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.LoginResponse;
 import com.example.demo.infrastructure.adapter.in.web.dto.MensajeResponse;
+import com.example.demo.infrastructure.adapter.in.web.dto.OlvideContrasenaRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.ReenviarVerificacionRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.RegistroUsuarioRequest;
+import com.example.demo.infrastructure.adapter.in.web.dto.RestablecerContrasenaRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.UsuarioResponse;
 import com.example.demo.infrastructure.adapter.in.web.dto.VerificarCorreoRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,17 +38,26 @@ public class AuthController {
 
         private final RegistrarUsuarioUseCase registrarUsuarioUseCase;
         private final LoginUseCase loginUseCase;
+        private final LoginGoogleUseCase loginGoogleUseCase;
         private final VerificarCorreoUseCase verificarCorreoUseCase;
         private final ReenviarVerificacionUseCase reenviarVerificacionUseCase;
+        private final SolicitarRecuperacionContrasenaUseCase solicitarRecuperacionContrasenaUseCase;
+        private final RestablecerContrasenaUseCase restablecerContrasenaUseCase;
 
         public AuthController(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                         LoginUseCase loginUseCase,
+                        LoginGoogleUseCase loginGoogleUseCase,
                         VerificarCorreoUseCase verificarCorreoUseCase,
-                        ReenviarVerificacionUseCase reenviarVerificacionUseCase) {
+                        ReenviarVerificacionUseCase reenviarVerificacionUseCase,
+                        SolicitarRecuperacionContrasenaUseCase solicitarRecuperacionContrasenaUseCase,
+                        RestablecerContrasenaUseCase restablecerContrasenaUseCase) {
                 this.registrarUsuarioUseCase = registrarUsuarioUseCase;
                 this.loginUseCase = loginUseCase;
+                this.loginGoogleUseCase = loginGoogleUseCase;
                 this.verificarCorreoUseCase = verificarCorreoUseCase;
                 this.reenviarVerificacionUseCase = reenviarVerificacionUseCase;
+                this.solicitarRecuperacionContrasenaUseCase = solicitarRecuperacionContrasenaUseCase;
+                this.restablecerContrasenaUseCase = restablecerContrasenaUseCase;
         }
 
         @PostMapping("/register")
@@ -74,6 +89,24 @@ public class AuthController {
                         @Valid @RequestBody @Parameter(description = "Credenciales de acceso", required = true) LoginRequest request) {
                 LoginUseCase.ResultadoLogin resultado = loginUseCase.ejecutar(request.getCorreo(),
                                 request.getContrasena());
+                LoginResponse response = new LoginResponse(
+                                resultado.token(),
+                                resultado.expiracionMs(),
+                                resultado.id(),
+                                resultado.nombre(),
+                                resultado.rol());
+                return ResponseEntity.ok(response);
+        }
+
+        @PostMapping("/google")
+        @Operation(summary = "Autenticacion con Google", description = "Inicia sesion o registra automaticamente al usuario a partir del id_token de Google.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Autenticacion con Google exitosa", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Token de Google invalido", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<LoginResponse> loginGoogle(
+                        @Valid @RequestBody @Parameter(description = "Token de Google emitido por GIS", required = true) GoogleAuthRequest request) {
+                LoginUseCase.ResultadoLogin resultado = loginGoogleUseCase.ejecutar(request.getIdToken());
                 LoginResponse response = new LoginResponse(
                                 resultado.token(),
                                 resultado.expiracionMs(),
@@ -126,6 +159,41 @@ public class AuthController {
         reenviarVerificacionUseCase.ejecutar(request.getCorreo());
         return ResponseEntity.ok(new MensajeResponse(
                 "Si el correo esta registrado y sin verificar, se envio un nuevo enlace de verificacion"));
+    }
+
+    @PostMapping("/olvide-contrasena")
+    @Operation(summary = "Solicitar recuperacion de contrasena",
+            description = "Envia un correo con un token para restablecer la contrasena si el usuario existe.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Solicitud procesada exitosamente",
+                    content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<MensajeResponse> olvideContrasena(
+            @Valid @RequestBody
+            @Parameter(description = "Correo registrado para recuperar acceso", required = true)
+            OlvideContrasenaRequest request) {
+        solicitarRecuperacionContrasenaUseCase.ejecutar(request.getCorreo());
+        return ResponseEntity.ok(new MensajeResponse(
+                "Si el correo esta registrado en LocalSpot, recibiras instrucciones para restablecer tu contrasena"));
+    }
+
+    @PostMapping("/restablecer-contrasena")
+    @Operation(summary = "Restablecer contrasena",
+            description = "Actualiza la contrasena usando un token de recuperacion valido.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Contrasena actualizada exitosamente",
+                    content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Token invalido o expirado",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<MensajeResponse> restablecerContrasena(
+            @Valid @RequestBody
+            @Parameter(description = "Token y nueva contrasena", required = true)
+            RestablecerContrasenaRequest request) {
+        restablecerContrasenaUseCase.ejecutar(request.getToken(), request.getNuevaContrasena());
+        return ResponseEntity.ok(new MensajeResponse("Tu contrasena ha sido actualizada exitosamente"));
     }
 
         private UsuarioResponse toResponse(Usuario usuario) {

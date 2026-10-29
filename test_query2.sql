@@ -1,0 +1,1 @@
+﻿SELECT id_lugar, nombre, nombre LIKE '%izza%' as like_match, nombre ILIKE '%pizza%' as ilike_match FROM lugar WHERE id_lugar=1;

@@ -33,6 +33,12 @@
 		<archunit.version>1.3.0</archunit.version>
 		<testcontainers.version>1.20.4</testcontainers.version>
 		<jacoco.version>0.8.14</jacoco.version>
+		<sonar.host.url>http://localhost:9000</sonar.host.url>
+		<sonar.projectKey>LocalSpot-Backend</sonar.projectKey>
+		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/model/**,**/adapter/out/ai/**,**/adapter/in/web/**</sonar.cpd.exclusions>
+		<sonar.projectName>LocalSpot Backend</sonar.projectName>
+		<sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.coverage.exclusions>**/dto/**,**/entity/**,**/model/**,**/config/**,**/DemoApplication.java</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
