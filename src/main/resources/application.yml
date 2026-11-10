@@ -48,6 +48,15 @@ server:
   port: ${PORT:8080}
   shutdown: graceful
   forward-headers-strategy: framework
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
+    min-response-size: 1024
+  tomcat:
+    threads:
+      max: ${SERVER_TOMCAT_MAX_THREADS:200}
+      min-spare: ${SERVER_TOMCAT_MIN_SPARE:20}
+    connection-timeout: 20000
 
 management:
   endpoints:
