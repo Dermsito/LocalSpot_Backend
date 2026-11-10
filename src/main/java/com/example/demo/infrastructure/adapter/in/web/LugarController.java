@@ -1,5 +1,6 @@
 package com.example.demo.infrastructure.adapter.in.web;
 
+import com.example.demo.application.usecase.BuscarLugaresConIaUseCase;
 import com.example.demo.application.usecase.BuscarLugaresUseCase;
 import com.example.demo.application.usecase.ObtenerDetalleLugarUseCase;
 import com.example.demo.domain.model.Calificacion;
@@ -11,13 +12,16 @@ import com.example.demo.domain.model.Paginacion;
 import com.example.demo.domain.port.CalificacionRepositoryPort;
 import com.example.demo.domain.port.CategoriaRepositoryPort;
 import com.example.demo.domain.port.GeocodingPort;
+import com.example.demo.infrastructure.adapter.in.web.dto.BusquedaIaRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.CalificacionResponse;
 import com.example.demo.infrastructure.adapter.in.web.dto.FotoResponse;
 import com.example.demo.infrastructure.adapter.in.web.dto.LugarDetalleResponse;
+import com.example.demo.infrastructure.adapter.in.web.dto.LugarRecomendadoIaResponse;
 import com.example.demo.infrastructure.adapter.in.web.dto.LugarResponse;
 import com.example.demo.infrastructure.adapter.in.web.dto.PaginaResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,17 +35,20 @@ import java.util.stream.Collectors;
 public class LugarController {
 
     private final BuscarLugaresUseCase buscarLugaresUseCase;
+    private final BuscarLugaresConIaUseCase buscarLugaresConIaUseCase;
     private final ObtenerDetalleLugarUseCase obtenerDetalleLugarUseCase;
     private final GeocodingPort geocodingPort;
     private final CategoriaRepositoryPort categoriaRepositoryPort;
     private final CalificacionRepositoryPort calificacionRepositoryPort;
 
     public LugarController(BuscarLugaresUseCase buscarLugaresUseCase,
+            BuscarLugaresConIaUseCase buscarLugaresConIaUseCase,
             ObtenerDetalleLugarUseCase obtenerDetalleLugarUseCase,
             GeocodingPort geocodingPort,
             CategoriaRepositoryPort categoriaRepositoryPort,
             CalificacionRepositoryPort calificacionRepositoryPort) {
         this.buscarLugaresUseCase = buscarLugaresUseCase;
+        this.buscarLugaresConIaUseCase = buscarLugaresConIaUseCase;
         this.obtenerDetalleLugarUseCase = obtenerDetalleLugarUseCase;
         this.geocodingPort = geocodingPort;
         this.categoriaRepositoryPort = categoriaRepositoryPort;
@@ -90,6 +97,20 @@ public class LugarController {
     public ResponseEntity<LugarDetalleResponse> detalle(@PathVariable Long id) {
         ObtenerDetalleLugarUseCase.DetalleLugar detalle = obtenerDetalleLugarUseCase.ejecutar(id);
         LugarDetalleResponse response = toDetalleResponse(detalle);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/buscar-ia")
+    @Operation(summary = "Busqueda inteligente con Gemini IA", description = "Recomienda lugares basados en una busqueda o deseo en lenguaje natural usando IA.")
+    public ResponseEntity<List<LugarRecomendadoIaResponse>> buscarConIa(
+            @Valid @RequestBody BusquedaIaRequest request) {
+        List<BuscarLugaresConIaUseCase.LugarRecomendado> recomendados =
+                buscarLugaresConIaUseCase.ejecutar(request.getConsulta());
+
+        List<LugarRecomendadoIaResponse> response = recomendados.stream()
+                .map(rec -> new LugarRecomendadoIaResponse(toResponse(rec.lugar()), rec.motivo()))
+                .collect(Collectors.toList());
+
         return ResponseEntity.ok(response);
     }
 

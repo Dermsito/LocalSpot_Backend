@@ -12,11 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-/**
- * Crea el usuario administrador inicial si no existe.
- * Credenciales: ADMIN_EMAIL / ADMIN_PASSWORD (env vars).
- * Si las variables no estan definidas, no crea admin y registra advertencia.
- */
 @Component
 public class AdminDataInitializer implements ApplicationRunner {
 
@@ -41,25 +36,25 @@ public class AdminDataInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         if (adminEmail == null || adminEmail.isBlank()
                 || adminPassword == null || adminPassword.isBlank()) {
-            log.warn("ADMIN_EMAIL / ADMIN_PASSWORD no configurados. No se crea usuario administrador por defecto.");
             return;
         }
 
-        if (usuarioRepositoryPort.existsByCorreo(adminEmail)) {
-            log.info("Usuario administrador ya existe: {}", adminEmail);
-            return;
-        }
-
-        Usuario admin = new Usuario();
-        admin.setNombre("Administrador LocalSpot");
-        admin.setCorreo(adminEmail);
-        admin.setContrasenaHash(passwordEncoder.encode(adminPassword));
-        admin.setTipoUsuario(Usuario.TipoUsuario.ADMINISTRADOR);
-        admin.setFechaRegistro(LocalDateTime.now());
-        admin.setVerificado(true);
-        admin.setFechaVerificacion(LocalDateTime.now());
-
-        usuarioRepositoryPort.save(admin);
-        log.info("Usuario administrador creado exitosamente: {}", adminEmail);
+        usuarioRepositoryPort.findByCorreo(adminEmail).ifPresentOrElse(admin -> {
+            admin.setContrasenaHash(passwordEncoder.encode(adminPassword));
+            admin.setVerificado(true);
+            usuarioRepositoryPort.save(admin);
+            log.info("Password de admin actualizada exitosamente: {}", adminEmail);
+        }, () -> {
+            Usuario admin = new Usuario();
+            admin.setNombre("Administrador LocalSpot");
+            admin.setCorreo(adminEmail);
+            admin.setContrasenaHash(passwordEncoder.encode(adminPassword));
+            admin.setTipoUsuario(Usuario.TipoUsuario.ADMINISTRADOR);
+            admin.setFechaRegistro(LocalDateTime.now());
+            admin.setVerificado(true);
+            admin.setFechaVerificacion(LocalDateTime.now());
+            usuarioRepositoryPort.save(admin);
+            log.info("Usuario administrador creado exitosamente: {}", adminEmail);
+        });
     }
 }

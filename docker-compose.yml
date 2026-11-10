@@ -42,21 +42,6 @@ services:
     networks:
       - localspot-net
 
-  mailpit:
-    image: axllent/mailpit:v1.20
-    container_name: localspot-mailpit
-    ports:
-      - "127.0.0.1:${MAILPIT_SMTP_PORT:-11025}:1025"
-      - "127.0.0.1:${MAILPIT_UI_PORT:-18025}:8025"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "--spider", "http://localhost:8025/api/v1/info"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    networks:
-      - localspot-net
-
   backend:
     build:
       context: .
@@ -75,10 +60,15 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localspot.test}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123456}
       UPLOAD_DIR: /app/uploads
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-      # Verificacion de correo via SMTP (Mailpit en desarrollo)
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200,http://127.0.0.1:4200}
+      # Verificacion de correo via SMTP.
+      # Desarrollo: Mailpit (MAIL_HOST=mailpit). Produccion: SMTP real (ej. smtp.gmail.com:587).
       MAIL_HOST: ${MAIL_HOST:-mailpit}
       MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-false}
       MAIL_FROM: ${MAIL_FROM:-no-reply@localspot.test}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
       VERIFICACION_EXPIRACION_MINUTOS: ${VERIFICACION_EXPIRACION_MINUTOS:-1440}
@@ -97,8 +87,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      mailpit:
-        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "-qO-", "--spider", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -109,24 +97,39 @@ services:
       - localspot-net
 
   frontend:
-    # FRONTEND PENDIENTE: el repositorio del frontend está en GitHub y está incompleto.
-    # Cuando esté listo, reemplazar esta sección por un build context que apunte al repo.
-    # Ejemplo:
-    #   build:
-    #     context: ../LocalSpot_Frontend
-    #     dockerfile: Dockerfile
-    image: nginx:alpine
+    build:
+      context: ../LocalSpot_Frontend
+      dockerfile: Dockerfile
+      args:
+        # API key de Google Maps JavaScript API usada por el mapa embebido del frontend.
+        MAPS_API_KEY: ${FRONTEND_MAPS_API_KEY:-}
+    image: localspot-frontend:1.0.0
     container_name: localspot-frontend
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-3000}:80"
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:8080"
     depends_on:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "--spider", "http://localhost:80/"]
+      test: ["CMD", "wget", "-qO-", "--spider", "http://localhost:8080/"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 15s
+    networks:
+      - localspot-net
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: localspot-sonarqube
+    ports:
+      - "127.0.0.1:9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
     networks:
       - localspot-net
 
@@ -137,3 +140,6 @@ networks:
 volumes:
   postgres_data:
   uploads_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

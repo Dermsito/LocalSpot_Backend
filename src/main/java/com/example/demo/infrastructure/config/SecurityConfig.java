@@ -36,6 +36,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("java:S4502") // CSRF deshabilitado de forma segura: la API es 100% Stateless con autenticacion basada en Bearer JWT
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -44,13 +45,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Auth publico
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login",
+                                "/api/auth/google",
                                 "/api/auth/logout", "/api/auth/verificar-correo",
-                                "/api/auth/reenviar-verificacion")
+                                "/api/auth/reenviar-verificacion",
+                                "/api/auth/olvide-contrasena",
+                                "/api/auth/restablecer-contrasena")
                         .permitAll()
                         // Categorias solo lectura publico
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         // Lugares: busqueda y detalle publicos (solo VERIFICADOS)
                         .requestMatchers(HttpMethod.GET, "/api/lugares", "/api/lugares/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/lugares/buscar-ia").permitAll()
                         // Swagger y Actuator
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(

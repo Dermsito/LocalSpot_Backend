@@ -1,0 +1,1 @@
+﻿SELECT 'Pizzeria' LIKE '%izza%' as like_match, 'Pizzeria' ILIKE '%pizza%' as ilike_match, position('pizza' in lower('Pizzeria')) as pos;
