@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="LocalSpot - 9 Escenarios Rapidos" enabled="true">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="LocalSpot_9_Escenarios_Oficiales" enabled="true">
+      <stringProp name="TestPlan.comments">Plan Oficial de Pruebas de Carga y Estres - LocalSpot Backend</stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
@@ -9,19 +10,32 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="HOST" elementType="Argument">
             <stringProp name="Argument.name">HOST</stringProp>
-            <stringProp name="Argument.value">${__P(HOST,localspot-backend)}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.value">${__P(host,localspot-backend)}</stringProp>
           </elementProp>
           <elementProp name="PORT" elementType="Argument">
             <stringProp name="Argument.name">PORT</stringProp>
-            <stringProp name="Argument.value">${__P(PORT,8080)}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.value">${__P(port,8080)}</stringProp>
           </elementProp>
         </collectionProp>
       </elementProp>
     </TestPlan>
     <hashTree>
-      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Headers" enabled="true">
+
+      <!-- HTTP Request Defaults Global -->
+      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP_Defaults" enabled="true">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+          <collectionProp name="Arguments.arguments"/>
+        </elementProp>
+        <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+        <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+        <stringProp name="HTTPSampler.protocol">http</stringProp>
+        <stringProp name="HTTPSampler.connect_timeout">5000</stringProp>
+        <stringProp name="HTTPSampler.response_timeout">15000</stringProp>
+      </ConfigTestElement>
+      <hashTree/>
+
+      <!-- HTTP Header Manager Global (JSON) -->
+      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Headers_JSON" enabled="true">
         <collectionProp name="HeaderManager.headers">
           <elementProp name="" elementType="Header">
             <stringProp name="Header.name">Content-Type</stringProp>
@@ -34,15 +48,10 @@
         </collectionProp>
       </HeaderManager>
       <hashTree/>
-      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Defaults" enabled="true">
-        <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
-        <stringProp name="HTTPSampler.port">${PORT}</stringProp>
-        <stringProp name="HTTPSampler.protocol">http</stringProp>
-        <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-      </ConfigTestElement>
-      <hashTree/>
 
-      <!-- 1. LOGIN CONCURRENTE (50 VUs, Ramp 10s, 5 loops) -->
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 1 — LOGIN CONCURRENTE (50 VUs, Ramp 10s, Loops 5)   -->
+      <!-- ============================================================== -->
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_01_Login_Concurrente" enabled="true">
         <stringProp name="ThreadGroup.num_threads">50</stringProp>
         <stringProp name="ThreadGroup.ramp_time">10</stringProp>
@@ -65,10 +74,29 @@
           <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
         </HTTPSamplerProxy>
-        <hashTree/>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_HTTP_200" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="Assert_Token_Presente" enabled="true">
+            <stringProp name="JSON_PATH">$.token</stringProp>
+            <stringProp name="EXPECTED_VALUE"></stringProp>
+            <boolProp name="JSONVALIDATION">false</boolProp>
+            <boolProp name="EXPECT_NULL">false</boolProp>
+            <boolProp name="INVERT">false</boolProp>
+          </JSONPathAssertion>
+          <hashTree/>
+        </hashTree>
       </hashTree>
 
-      <!-- 2. CONSULTA MASIVA (80 VUs, Ramp 15s, 10 loops) -->
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 2 — CONSULTA MASIVA (80 VUs, Ramp 15s, Loops 10)     -->
+      <!-- ============================================================== -->
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_02_Consulta_Masiva" enabled="true">
         <stringProp name="ThreadGroup.num_threads">80</stringProp>
         <stringProp name="ThreadGroup.ramp_time">15</stringProp>
@@ -82,10 +110,29 @@
           <stringProp name="HTTPSampler.path">/api/lugares?page=0&amp;size=10</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
-        <hashTree/>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_HTTP_200" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="Assert_Content_Array" enabled="true">
+            <stringProp name="JSON_PATH">$.content</stringProp>
+            <stringProp name="EXPECTED_VALUE"></stringProp>
+            <boolProp name="JSONVALIDATION">false</boolProp>
+            <boolProp name="EXPECT_NULL">false</boolProp>
+            <boolProp name="INVERT">false</boolProp>
+          </JSONPathAssertion>
+          <hashTree/>
+        </hashTree>
       </hashTree>
 
-      <!-- 3. REGISTRO CONCURRENTE (40 VUs, Ramp 10s, 1 loop) -->
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 3 — REGISTRO CONCURRENTE (40 VUs, Ramp 10s, 1 loop)  -->
+      <!-- ============================================================== -->
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_03_Registro_Concurrente" enabled="true">
         <stringProp name="ThreadGroup.num_threads">40</stringProp>
         <stringProp name="ThreadGroup.ramp_time">10</stringProp>
@@ -100,7 +147,7 @@
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
-                <stringProp name="Argument.value">{"nombre":"JM_${__threadNum}","correo":"jm_${__UUID()}@test.com","contrasena":"Password123"}</stringProp>
+                <stringProp name="Argument.value">{"nombre":"JM_User_${__threadNum}","correo":"jm_reg_${__UUID()}@test.com","contrasena":"Password123"}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -108,10 +155,31 @@
           <stringProp name="HTTPSampler.path">/api/auth/register</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
         </HTTPSamplerProxy>
-        <hashTree/>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_HTTP_201" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="Assert_Id_Usuario" enabled="true">
+            <stringProp name="JSON_PATH">$.idUsuario</stringProp>
+            <stringProp name="EXPECTED_VALUE"></stringProp>
+            <boolProp name="JSONVALIDATION">false</boolProp>
+            <boolProp name="EXPECT_NULL">false</boolProp>
+            <boolProp name="INVERT">false</boolProp>
+          </JSONPathAssertion>
+          <hashTree/>
+        </hashTree>
       </hashTree>
 
-      <!-- 4. FLUJO COMPLETO DEL NEGOCIO (20 VUs, Loops 5) -->
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 4 — FLUJO COMPLETO: Login -> Consulta ->             -->
+      <!--               Registro -> Actualizacion -> Consulta Final      -->
+      <!--               (20 VUs, Loops 5)                                -->
+      <!-- ============================================================== -->
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_04_Flujo_Completo" enabled="true">
         <stringProp name="ThreadGroup.num_threads">20</stringProp>
         <stringProp name="ThreadGroup.ramp_time">10</stringProp>
@@ -121,12 +189,13 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
+        <!-- 4.1 Login Admin -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E4_1_Login" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
-                <stringProp name="Argument.value">{"correo":"final@localspot.test","contrasena":"password"}</stringProp>
+                <stringProp name="Argument.value">{"correo":"admin@localspot.test","contrasena":"Admin123456"}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -141,14 +210,44 @@
             <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
           </JSONPostProcessor>
           <hashTree/>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_200" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
         </hashTree>
+
+        <!-- 4.2 Consulta Lugares -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E4_2_Consulta" enabled="true">
           <stringProp name="HTTPSampler.path">/api/lugares?page=0&amp;size=5</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
-        <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E4_3_Registrar_Favorito" enabled="true">
-          <stringProp name="HTTPSampler.path">/api/favoritos/1</stringProp>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_200" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+
+        <!-- 4.3 Registro (Crear Categoria) -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E4_3_Registro_Categoria" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{"nombreCategoria":"Cat_E4_${__threadNum}_${__UUID()}"}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/admin/categorias</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
         </HTTPSamplerProxy>
         <hashTree>
@@ -161,25 +260,95 @@
             </collectionProp>
           </HeaderManager>
           <hashTree/>
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract_CatId" enabled="true">
+            <stringProp name="JSONPostProcessor.referenceNames">CAT_ID_E4</stringProp>
+            <stringProp name="JSONPostProcessor.jsonPathExprs">$.idCategoria</stringProp>
+            <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
+          </JSONPostProcessor>
+          <hashTree/>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_201" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E4_4_Consulta_Final" enabled="true">
-          <stringProp name="HTTPSampler.path">/api/lugares/1</stringProp>
+
+        <!-- 4.4 Actualización (Actualizar Categoria creada) -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E4_4_Actualizacion_Categoria" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{"nombreCategoria":"Cat_E4_Up_${__threadNum}_${CAT_ID_E4}"}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/admin/categorias/${CAT_ID_E4}</stringProp>
+          <stringProp name="HTTPSampler.method">PUT</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Header" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Authorization</stringProp>
+                <stringProp name="Header.value">Bearer ${TOKEN_E4}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_200" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+
+        <!-- 4.5 Consulta Final -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E4_5_Consulta_Final" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/lugares/20</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
-        <hashTree/>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert_200" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="Assert_Lugar_Nombre" enabled="true">
+            <stringProp name="JSON_PATH">$.nombre</stringProp>
+            <stringProp name="EXPECTED_VALUE"></stringProp>
+            <boolProp name="JSONVALIDATION">false</boolProp>
+            <boolProp name="EXPECT_NULL">false</boolProp>
+            <boolProp name="INVERT">false</boolProp>
+          </JSONPathAssertion>
+          <hashTree/>
+        </hashTree>
       </hashTree>
 
-      <!-- 5. SATURACION PROGRESIVA LOGIN (Fase 1: 50, Fase 2: 100, Fase 3: 200, Fase 4: 300) -->
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_05_Saturacion_Login_300" enabled="true">
-        <stringProp name="ThreadGroup.num_threads">300</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">30</stringProp>
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 5 — SATURACIÓN PROGRESIVA DE LOGIN (4 FASES)         -->
+      <!-- Fase 1: 50 | Fase 2: 100 | Fase 3: 200 | Fase 4: 300           -->
+      <!-- ============================================================== -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_05_Fase1_50_Login" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">50</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">5</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">2</stringProp>
+          <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST_05_Login_Stress" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST_05_Fase1_50" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -195,39 +364,120 @@
         <hashTree/>
       </hashTree>
 
-      <!-- 6. SOBRECARGA CONSULTAS (300 VUs, Ramp 20s) -->
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_06_Sobrecarga_Consultas" enabled="true">
-        <stringProp name="ThreadGroup.num_threads">300</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">20</stringProp>
-        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
-          <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">5</stringProp>
-        </elementProp>
-      </ThreadGroup>
-      <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET_06_Consultas_Criticas" enabled="true">
-          <stringProp name="HTTPSampler.path">/api/lugares?q=zona&amp;page=0&amp;size=20</stringProp>
-          <stringProp name="HTTPSampler.method">GET</stringProp>
-        </HTTPSamplerProxy>
-        <hashTree/>
-      </hashTree>
-
-      <!-- 7. SOBRECARGA CRUD (100 VUs, Loops 5) -->
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_07_Sobrecarga_CRUD" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_05_Fase2_100_Login" enabled="true">
         <stringProp name="ThreadGroup.num_threads">100</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">15</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">10</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">3</stringProp>
+          <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_1_Login" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST_05_Fase2_100" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
                 <stringProp name="Argument.value">{"correo":"final@localspot.test","contrasena":"password"}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_05_Fase3_200_Login" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">200</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">15</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST_05_Fase3_200" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{"correo":"final@localspot.test","contrasena":"password"}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_05_Fase4_300_Login" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">300</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">20</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST_05_Fase4_300" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{"correo":"final@localspot.test","contrasena":"password"}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 6 — SOBRECARGA CONSULTAS (300 VUs, Ramp 20s)         -->
+      <!-- ============================================================== -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_06_Sobrecarga_Consultas" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">300</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">20</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET_06_Filtro_Complejo" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/lugares?q=cafe&amp;categoriaId=1&amp;precioMin=5000&amp;precioMax=30000&amp;page=0&amp;size=20</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 7 — SOBRECARGA CRUD (Crear, Actualizar, Eliminar)   -->
+      <!--               (50 VUs, Loops 20)                               -->
+      <!-- ============================================================== -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_07_Sobrecarga_CRUD" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">50</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">15</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">20</stringProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <!-- 7.1 Login Admin una sola vez con token reutilizable o login ligero -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_1_Login" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{"correo":"admin@localspot.test","contrasena":"Admin123456"}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -243,8 +493,19 @@
           </JSONPostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_2_Create_Favorito" enabled="true">
-          <stringProp name="HTTPSampler.path">/api/favoritos/2</stringProp>
+
+        <!-- 7.2 Create Categoria -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_2_Create_Categoria" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{"nombreCategoria":"Cat_${__threadNum}_${__UUID()}"}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/admin/categorias</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
         </HTTPSamplerProxy>
         <hashTree>
@@ -257,10 +518,27 @@
             </collectionProp>
           </HeaderManager>
           <hashTree/>
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract_CatId" enabled="true">
+            <stringProp name="JSONPostProcessor.referenceNames">CAT_ID_CRUD</stringProp>
+            <stringProp name="JSONPostProcessor.jsonPathExprs">$.idCategoria</stringProp>
+            <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
+          </JSONPostProcessor>
+          <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_3_Read_Favoritos" enabled="true">
-          <stringProp name="HTTPSampler.path">/api/favoritos</stringProp>
-          <stringProp name="HTTPSampler.method">GET</stringProp>
+
+        <!-- 7.3 Update Categoria -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_3_Update_Categoria" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{"nombreCategoria":"Cat_Mod_${__threadNum}_${CAT_ID_CRUD}"}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/api/admin/categorias/${CAT_ID_CRUD}</stringProp>
+          <stringProp name="HTTPSampler.method">PUT</stringProp>
         </HTTPSamplerProxy>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Header" enabled="true">
@@ -273,8 +551,10 @@
           </HeaderManager>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_4_Delete_Favorito" enabled="true">
-          <stringProp name="HTTPSampler.path">/api/favoritos/2</stringProp>
+
+        <!-- 7.4 Delete Categoria -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="E7_4_Delete_Categoria" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/admin/categorias/${CAT_ID_CRUD}</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
         </HTTPSamplerProxy>
         <hashTree>
@@ -288,14 +568,21 @@
           </HeaderManager>
           <hashTree/>
         </hashTree>
+        
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Timer_20ms" enabled="true">
+          <stringProp name="ConstantTimer.delay">20</stringProp>
+        </ConstantTimer>
+        <hashTree/>
       </hashTree>
 
-      <!-- 8. RESISTENCIA CONTINUA (50 VUs, duración 60 segundos demostrativo en suite rápida) -->
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 8 — RESISTENCIA CONTINUA (50 VUs, 30s Rapida / Soak) -->
+      <!-- ============================================================== -->
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_08_Resistencia_Continua" enabled="true">
         <stringProp name="ThreadGroup.num_threads">50</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">10</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">5</stringProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
-        <stringProp name="ThreadGroup.duration">60</stringProp>
+        <stringProp name="ThreadGroup.duration">30</stringProp>
         <stringProp name="ThreadGroup.delay">0</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" enabled="true">
           <boolProp name="LoopController.continue_forever">true</boolProp>
@@ -307,13 +594,15 @@
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Timer_500ms" enabled="true">
-          <stringProp name="ConstantTimer.delay">500</stringProp>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Timer_100ms" enabled="true">
+          <stringProp name="ConstantTimer.delay">100</stringProp>
         </ConstantTimer>
         <hashTree/>
       </hashTree>
 
-      <!-- 9. FALLA CONTROLADA DEL SISTEMA (400 VUs sobrecarga de saturación) -->
+      <!-- ============================================================== -->
+      <!-- ESCENARIO 9 — FALLA CONTROLADA DEL SISTEMA (400 VUs)            -->
+      <!-- ============================================================== -->
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="ESC_09_Falla_Controlada" enabled="true">
         <stringProp name="ThreadGroup.num_threads">400</stringProp>
         <stringProp name="ThreadGroup.ramp_time">10</stringProp>
