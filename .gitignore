@@ -32,12 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 .postman/
-postman/
-target/
-.idea/
-*.log
-.postman/
-postman/
+/postman/
 target/
 .idea/
 *.log

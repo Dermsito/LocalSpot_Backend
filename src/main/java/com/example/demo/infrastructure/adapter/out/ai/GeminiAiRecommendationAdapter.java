@@ -10,12 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
 
@@ -44,14 +45,18 @@ public class GeminiAiRecommendationAdapter implements AiRecommendationPort {
     public GeminiAiRecommendationAdapter(
             @Value("${localspot.integrations.ai.api-key:}") String apiKey,
             @Value("${localspot.integrations.ai.api-url:https://generativelanguage.googleapis.com}") String apiUrl,
-            @Value("${localspot.integrations.ai.model:gemini-1.5-flash}") String model) {
+            @Value("${localspot.integrations.ai.model:gemini-3.5-flash-lite}") String model) {
         this.apiKey = apiKey;
         this.apiUrl = apiUrl;
         this.model = model;
 
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(Duration.ofSeconds(3));
-        requestFactory.setReadTimeout(Duration.ofSeconds(10));
+        // HttpClient del JDK con pool de conexiones reutilizado entre llamadas
+        // (evita repetir el handshake TLS en cada peticion).
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofSeconds(8));
         this.restClient = RestClient.builder().requestFactory(requestFactory).build();
     }
 

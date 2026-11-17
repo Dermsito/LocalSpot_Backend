@@ -59,6 +59,9 @@ public class UseCaseConfig {
     @Value("${localspot.recuperacion.base-url:http://localhost:3000}")
     private String baseUrlRecuperacion;
 
+    @Value("${localspot.integrations.ai.max-motivos:12}")
+    private int maxMotivosIa;
+
     @Bean
     public RegistrarUsuarioUseCase registrarUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
             PasswordEncoderPort passwordEncoderPort,
@@ -211,7 +214,7 @@ public class UseCaseConfig {
             CalificacionRepositoryPort calificacionRepositoryPort,
             AiRecommendationPort aiRecommendationPort) {
         return new GenerarRecomendacionesUseCase(lugarRepositoryPort, preferenciaRepositoryPort,
-                recomendacionRepositoryPort, calificacionRepositoryPort, aiRecommendationPort);
+                recomendacionRepositoryPort, calificacionRepositoryPort, aiRecommendationPort, maxMotivosIa);
     }
 
     @Bean

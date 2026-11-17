@@ -34,11 +34,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.example.demo.infrastructure.logging.DbLoggingService;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private final DbLoggingService dbLoggingService;
+
+    public GlobalExceptionHandler(DbLoggingService dbLoggingService) {
+        this.dbLoggingService = dbLoggingService;
+    }
 
     // 409 Conflict
     @ExceptionHandler({ CorreoDuplicadoException.class, FavoritoDuplicadoException.class,
@@ -104,6 +111,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenerico(Exception ex, HttpServletRequest request) {
         log.error("Error inesperado en {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        dbLoggingService.registrarError("GlobalExceptionHandler", "Error inesperado en " + request.getRequestURI() + ": " + ex.getMessage(), ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrio un error inesperado", request);
     }
 

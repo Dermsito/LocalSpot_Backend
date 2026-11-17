@@ -99,7 +99,12 @@ localspot:
     ai:
       api-key: ${AI_API_KEY:}
       api-url: ${AI_API_URL:https://generativelanguage.googleapis.com}
-      model: ${AI_MODEL:gemini-1.5-flash}
+      model: ${AI_MODEL:gemini-3.5-flash-lite}
+      # Maximo de motivos redactados por IA por generacion de recomendaciones.
+      # El resto de recomendaciones usa un motivo por defecto (evita N llamadas lentas).
+      max-motivos: ${AI_MAX_MOTIVOS:12}
+      # Maximo de lugares incluidos en el prompt de la busqueda inteligente.
+      max-lugares-prompt: ${AI_MAX_LUGARES_PROMPT:40}
     maps:
       api-key: ${MAPS_API_KEY:}
       api-url: ${MAPS_API_URL:https://maps.googleapis.com/maps/api/geocode/json}

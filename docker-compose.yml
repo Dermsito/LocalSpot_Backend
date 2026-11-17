@@ -55,6 +55,9 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-localspot123}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_FLYWAY_ENABLED: "true"
+      # Fuerza IPv4 en la JVM (evita timeouts de conexion en contenedores Docker
+      # donde Java intenta IPv6 primero y no esta disponible).
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       JWT_SECRET: ${JWT_SECRET:-localspot-super-secret-key-12345678901234567890123456789012}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localspot.test}
@@ -75,7 +78,9 @@ services:
       # Integraciones externas (vacio = se usan los adaptadores stub)
       AI_API_KEY: ${AI_API_KEY:-}
       AI_API_URL: ${AI_API_URL:-https://generativelanguage.googleapis.com}
-      AI_MODEL: ${AI_MODEL:-gemini-1.5-flash}
+      AI_MODEL: ${AI_MODEL:-gemini-3.5-flash-lite}
+      AI_MAX_MOTIVOS: ${AI_MAX_MOTIVOS:-12}
+      AI_MAX_LUGARES_PROMPT: ${AI_MAX_LUGARES_PROMPT:-40}
       MAPS_API_KEY: ${MAPS_API_KEY:-}
       MAPS_DEFAULT_LAT: ${MAPS_DEFAULT_LAT:-4.3372}
       MAPS_DEFAULT_LON: ${MAPS_DEFAULT_LON:--74.3640}

@@ -111,9 +111,12 @@ Cierra sesion (requiere token).
   Si la clave esta vacia se usa un stub que solo entiende `"latitud,longitud"` y, en
   cualquier otro caso, devuelve el centro configurado (`MAPS_DEFAULT_LAT` /
   `MAPS_DEFAULT_LON`, por defecto Fusagasuga).
-- **Google Gemini** (`AI_API_KEY`): genera el motivo de cada recomendacion.
-  Sin clave se usa un stub local. En ambos casos hay CircuitBreaker + Retry y un
-  motivo de respaldo si el servicio falla.
+- **Google Gemini** (`AI_API_KEY`, modelo `AI_MODEL`, por defecto `gemini-3.5-flash-lite`):
+  genera el motivo de las recomendaciones y la busqueda inteligente. Sin clave se usa
+  un stub local. En ambos casos hay CircuitBreaker + Retry y un motivo de respaldo si el
+  servicio falla. Para acotar la latencia se limita el numero de motivos por IA
+  (`AI_MAX_MOTIVOS`) y de lugares incluidos en el prompt (`AI_MAX_LUGARES_PROMPT`),
+  y se usa el modelo ligero `gemini-3.5-flash-lite`.
 - **Correo SMTP** (`MAIL_HOST` / `MAIL_PORT`): envio de la verificacion. En desarrollo
   apunta a Mailpit (`http://127.0.0.1:18025`).
 

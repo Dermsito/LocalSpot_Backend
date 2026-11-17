@@ -11,12 +11,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,19 +33,25 @@ public class GeminiAiSearchAdapter implements AiSearchPort {
     private final String apiKey;
     private final String apiUrl;
     private final String model;
+    private final int maxLugaresPrompt;
 
     public GeminiAiSearchAdapter(
             @Value("${localspot.integrations.ai.api-key:}") String apiKey,
             @Value("${localspot.integrations.ai.api-url:https://generativelanguage.googleapis.com}") String apiUrl,
-            @Value("${localspot.integrations.ai.model:gemini-1.5-flash}") String model,
+            @Value("${localspot.integrations.ai.model:gemini-3.5-flash-lite}") String model,
+            @Value("${localspot.integrations.ai.max-lugares-prompt:40}") int maxLugaresPrompt,
             ObjectMapper objectMapper) {
         this.apiKey = apiKey;
         this.apiUrl = apiUrl;
         this.model = model;
+        this.maxLugaresPrompt = maxLugaresPrompt > 0 ? maxLugaresPrompt : 40;
         this.objectMapper = objectMapper;
 
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(Duration.ofSeconds(4));
+        // HttpClient del JDK con pool de conexiones reutilizado entre llamadas.
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(4))
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(Duration.ofSeconds(12));
         this.restClient = RestClient.builder().requestFactory(requestFactory).build();
     }
@@ -65,7 +72,7 @@ public class GeminiAiSearchAdapter implements AiSearchPort {
 
             GeminiRequest request = new GeminiRequest(
                     List.of(new Content(List.of(new Part(prompt)))),
-                    new GenerationConfig(512, 0.4));
+                    new GenerationConfig(512, 0.4, "application/json"));
 
             GeminiResponse response = restClient.post()
                     .uri(uri)
@@ -81,7 +88,8 @@ public class GeminiAiSearchAdapter implements AiSearchPort {
 
             return parsearRespuesta(texto, lugaresDisponibles);
         } catch (Exception ex) {
-            log.warn("Error consultando Gemini AI para busqueda inteligente: {}. Usando fallback local.", ex.getMessage());
+            log.warn("Error consultando Gemini AI para busqueda inteligente: {}. Usando fallback local.",
+                    ex.getMessage());
             return StubAiSearchAdapter.fallbackBusqueda(consulta, lugaresDisponibles);
         }
     }
@@ -94,10 +102,14 @@ public class GeminiAiSearchAdapter implements AiSearchPort {
 
     private String construirPrompt(String consulta, List<Lugar> lugares) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Eres un asistente inteligente de la app LocalSpot. El usuario busca: \"").append(consulta).append("\".\n");
+        sb.append("Eres un asistente inteligente de la app LocalSpot. El usuario busca: \"").append(consulta)
+                .append("\".\n");
         sb.append("A continuación tienes los lugares verificados disponibles en la plataforma:\n");
 
-        for (Lugar l : lugares) {
+        // Limitar el tamano del prompt: menos tokens de entrada = respuesta mas rapida.
+        int limite = Math.min(maxLugaresPrompt, lugares.size());
+        for (int i = 0; i < limite; i++) {
+            Lugar l = lugares.get(i);
             sb.append("- ID: ").append(l.getIdLugar())
                     .append(" | Nombre: ").append(l.getNombre());
             if (l.getDescripcion() != null && !l.getDescripcion().isBlank()) {
@@ -111,8 +123,10 @@ public class GeminiAiSearchAdapter implements AiSearchPort {
 
         sb.append("\nInstrucciones:\n");
         sb.append("1. Selecciona hasta 5 lugares que mejor respondan a lo que busca el usuario.\n");
-        sb.append("2. Para cada lugar explica en una frase corta y convincente (máximo 120 caracteres, en español) por qué se lo recomiendas para su búsqueda.\n");
-        sb.append("3. Responde ÚNICAMENTE un arreglo JSON con formato: [{\"idLugar\": <numero>, \"motivo\": \"<texto>\"}].\n");
+        sb.append(
+                "2. Para cada lugar explica en una frase corta y convincente (máximo 120 caracteres, en español) por qué se lo recomiendas para su búsqueda.\n");
+        sb.append(
+                "3. Responde ÚNICAMENTE un arreglo JSON con formato: [{\"idLugar\": <numero>, \"motivo\": \"<texto>\"}].\n");
         sb.append("No agregues texto explicativo ni bloques markdown fuera del JSON.");
         return sb.toString();
     }
@@ -167,10 +181,21 @@ public class GeminiAiSearchAdapter implements AiSearchPort {
         return content.parts().get(0).text();
     }
 
-    record GeminiRequest(List<Content> contents, GenerationConfig generationConfig) {}
-    record Content(List<Part> parts) {}
-    record Part(String text) {}
-    record GenerationConfig(Integer maxOutputTokens, Double temperature) {}
-    record GeminiResponse(List<Candidate> candidates) {}
-    record Candidate(Content content) {}
+    record GeminiRequest(List<Content> contents, GenerationConfig generationConfig) {
+    }
+
+    record Content(List<Part> parts) {
+    }
+
+    record Part(String text) {
+    }
+
+    record GenerationConfig(Integer maxOutputTokens, Double temperature, String responseMimeType) {
+    }
+
+    record GeminiResponse(List<Candidate> candidates) {
+    }
+
+    record Candidate(Content content) {
+    }
 }

@@ -1,7 +1,9 @@
 package com.example.demo.application.usecase;
 
 import com.example.demo.domain.exception.RecomendacionSinPreferenciasException;
+import com.example.demo.domain.model.EstadoVerificacion;
 import com.example.demo.domain.model.Lugar;
+import com.example.demo.domain.model.Paginacion;
 import com.example.demo.domain.model.Preferencia;
 import com.example.demo.domain.model.Recomendacion;
 import com.example.demo.domain.port.AiRecommendationPort;
@@ -15,33 +17,54 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * RF-09: Generar recomendaciones de lugares poco conocidos.
  * Requiere preferencias; filtra VERIFICADOS dentro del presupuesto;
  * calcula puntaje 0..100 priorizando baja popularidad y buena calificacion;
  * AiRecommendationPort genera el motivo (fallback por defecto).
+ *
+ * <p>El puntaje se calcula primero para todos los candidatos y solo despues
+ * se pide a la IA el motivo de los mejores ({@code limiteMotivosIa}); el resto
+ * reutiliza un motivo por defecto. Asi se evita una llamada a la IA por cada
+ * lugar, que era la causa principal de la latencia.</p>
  */
 public class GenerarRecomendacionesUseCase {
+
+    /** Limite por defecto de motivos redactados por IA en cada ejecucion. */
+    static final int LIMITE_MOTIVOS_IA_POR_DEFECTO = 12;
+
+    private static final String MOTIVO_POR_DEFECTO =
+            "Lugar poco conocido con buena relacion calidad-precio, recomendado para ti.";
+
+    private static final int MAX_CARACTERES_MOTIVO = 200;
 
     private final LugarRepositoryPort lugarRepositoryPort;
     private final PreferenciaRepositoryPort preferenciaRepositoryPort;
     private final RecomendacionRepositoryPort recomendacionRepositoryPort;
     private final CalificacionRepositoryPort calificacionRepositoryPort;
     private final AiRecommendationPort aiRecommendationPort;
+    private final int limiteMotivosIa;
 
     public GenerarRecomendacionesUseCase(LugarRepositoryPort lugarRepositoryPort,
                                           PreferenciaRepositoryPort preferenciaRepositoryPort,
                                           RecomendacionRepositoryPort recomendacionRepositoryPort,
                                           CalificacionRepositoryPort calificacionRepositoryPort,
-                                          AiRecommendationPort aiRecommendationPort) {
+                                          AiRecommendationPort aiRecommendationPort,
+                                          Integer limiteMotivosIa) {
         this.lugarRepositoryPort = lugarRepositoryPort;
         this.preferenciaRepositoryPort = preferenciaRepositoryPort;
         this.recomendacionRepositoryPort = recomendacionRepositoryPort;
         this.calificacionRepositoryPort = calificacionRepositoryPort;
         this.aiRecommendationPort = aiRecommendationPort;
+        this.limiteMotivosIa = (limiteMotivosIa == null || limiteMotivosIa < 0)
+                ? LIMITE_MOTIVOS_IA_POR_DEFECTO
+                : limiteMotivosIa;
     }
 
     public List<Recomendacion> ejecutar(Long idUsuario) {
@@ -51,65 +74,77 @@ public class GenerarRecomendacionesUseCase {
                     "Necesitas configurar tus preferencias antes de generar recomendaciones");
         }
 
-        List<Recomendacion> recomendaciones = new ArrayList<>();
-        LocalDateTime ahora = LocalDateTime.now();
+        Map<Long, Preferencia> preferenciasPorCategoria = preferencias.stream()
+                .filter(p -> p.getIdCategoria() != null)
+                .collect(Collectors.toMap(Preferencia::getIdCategoria, Function.identity(), (a, b) -> a));
 
+        // Fase 1: calcular candidatos y puntaje sin llamar todavia a la IA.
+        Map<Long, Candidato> mejoresPorLugar = new LinkedHashMap<>();
         for (Preferencia pref : preferencias) {
-            // Buscar lugares VERIFICADOS de la categoria y dentro del presupuesto
             var pagina = lugarRepositoryPort.buscarConFiltros(
                     null, pref.getIdCategoria(), null, null, null,
                     null, pref.getPresupuestoMax(),
-                    com.example.demo.domain.model.EstadoVerificacion.VERIFICADO,
-                    new com.example.demo.domain.model.Paginacion(0, 100));
+                    EstadoVerificacion.VERIFICADO, new Paginacion(0, 100));
 
             for (Lugar lugar : pagina.content()) {
                 double promedio = calificacionRepositoryPort.calcularPromedioByLugarId(lugar.getIdLugar());
-                long cantidadCalificaciones = calificacionRepositoryPort.findByLugarIdAndVisibleTrue(lugar.getIdLugar()).size();
-
-                // Puntaje de afinidad: prioriza buena calificacion (60%) y baja popularidad (40%)
+                long cantidadCalificaciones =
+                        calificacionRepositoryPort.findByLugarIdAndVisibleTrue(lugar.getIdLugar()).size();
                 BigDecimal puntaje = calcularPuntaje(promedio, cantidadCalificaciones);
 
-                // Buscar preferencia asociada (en este caso la de esta categoria)
-                Preferencia preferenciaAsociada = preferencias.stream()
-                        .filter(p -> p.getIdCategoria().equals(lugar.getIdCategoria()))
-                        .findFirst()
-                        .orElse(pref);
+                Preferencia preferenciaAsociada =
+                        preferenciasPorCategoria.getOrDefault(lugar.getIdCategoria(), pref);
 
-                String motivo;
-                try {
-                    motivo = aiRecommendationPort.generateMotivo(lugar, preferenciaAsociada);
-                } catch (Exception e) {
-                    motivo = "Lugar poco conocido con buena relacion calidad-precio, recomendado para ti.";
+                // Si un lugar encaja con varias preferencias, se conserva el mejor puntaje.
+                Candidato actual = mejoresPorLugar.get(lugar.getIdLugar());
+                if (actual == null || puntaje.compareTo(actual.puntaje()) > 0) {
+                    mejoresPorLugar.put(lugar.getIdLugar(),
+                            new Candidato(lugar, preferenciaAsociada, puntaje));
                 }
-                if (motivo != null && motivo.length() > 200) {
-                    motivo = motivo.substring(0, 200);
-                }
-
-                // No repetir lugar por usuario: si ya existe, actualizar puntaje
-                Optional<Recomendacion> existente =
-                        recomendacionRepositoryPort.findByUsuarioIdAndLugarId(idUsuario, lugar.getIdLugar());
-
-                Recomendacion recomendacion;
-                if (existente.isPresent()) {
-                    recomendacion = existente.get();
-                    recomendacion.setPuntajeAfinidad(puntaje);
-                    recomendacion.setMotivo(motivo);
-                    recomendacion.setFechaGeneracion(ahora);
-                } else {
-                    recomendacion = new Recomendacion();
-                    recomendacion.setIdUsuario(idUsuario);
-                    recomendacion.setIdLugar(lugar.getIdLugar());
-                    recomendacion.setPuntajeAfinidad(puntaje);
-                    recomendacion.setMotivo(motivo);
-                    recomendacion.setFechaGeneracion(ahora);
-                }
-                recomendaciones.add(recomendacionRepositoryPort.save(recomendacion));
             }
         }
 
-        // Ordenar por puntaje descendente
+        // Fase 2: ordenar y pedir el motivo a la IA solo para los mejores.
+        List<Candidato> candidatos = new ArrayList<>(mejoresPorLugar.values());
+        candidatos.sort(Comparator.comparing(Candidato::puntaje).reversed());
+
+        LocalDateTime ahora = LocalDateTime.now();
+        List<Recomendacion> recomendaciones = new ArrayList<>();
+
+        for (int i = 0; i < candidatos.size(); i++) {
+            Candidato candidato = candidatos.get(i);
+            String motivo = i < limiteMotivosIa
+                    ? generarMotivoIa(candidato.lugar(), candidato.preferencia())
+                    : MOTIVO_POR_DEFECTO;
+
+            Recomendacion recomendacion = recomendacionRepositoryPort
+                    .findByUsuarioIdAndLugarId(idUsuario, candidato.lugar().getIdLugar())
+                    .orElseGet(Recomendacion::new);
+            recomendacion.setIdUsuario(idUsuario);
+            recomendacion.setIdLugar(candidato.lugar().getIdLugar());
+            recomendacion.setPuntajeAfinidad(candidato.puntaje());
+            recomendacion.setMotivo(motivo);
+            recomendacion.setFechaGeneracion(ahora);
+
+            recomendaciones.add(recomendacionRepositoryPort.save(recomendacion));
+        }
+
         recomendaciones.sort(Comparator.comparing(Recomendacion::getPuntajeAfinidad).reversed());
         return recomendaciones;
+    }
+
+    private String generarMotivoIa(Lugar lugar, Preferencia preferencia) {
+        try {
+            String motivo = aiRecommendationPort.generateMotivo(lugar, preferencia);
+            if (motivo == null || motivo.isBlank()) {
+                return MOTIVO_POR_DEFECTO;
+            }
+            return motivo.length() > MAX_CARACTERES_MOTIVO
+                    ? motivo.substring(0, MAX_CARACTERES_MOTIVO)
+                    : motivo;
+        } catch (Exception e) {
+            return MOTIVO_POR_DEFECTO;
+        }
     }
 
     private BigDecimal calcularPuntaje(double promedio, long cantidadCalificaciones) {
@@ -122,5 +157,8 @@ public class GenerarRecomendacionesUseCase {
 
         double total = componenteCalificacion + componentePopularidad;
         return BigDecimal.valueOf(total).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private record Candidato(Lugar lugar, Preferencia preferencia, BigDecimal puntaje) {
     }
 }

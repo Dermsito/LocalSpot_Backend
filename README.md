@@ -5,6 +5,20 @@ Implementa una arquitectura hexagonal (puertos y adaptadores) con JWT para auten
 
 ---
 
+## Documentación Técnica
+
+- **[INFORME TÉCNICO INTEGRAL](docs/INFORME_TECNICO_INTEGRAL.md)**: 📄 **Documento maestro consolidado** que reúne arquitectura hexagonal, principios SOLID, metodología 12 factores, SonarQube, Postman, JMeter, k6, telemetría en BD y la guía exacta de capturas para sustentación.
+- **[Anexos Técnicos y Entregables](docs/ANEXOS.md)**: Repositorios Git, scripts SQL de verificación (`verificacion.sql`), colección Postman, archivos Docker y reportes de pruebas.
+- **[Pruebas Funcionales con Postman / Newman](docs/PRUEBAS_FUNCIONALES_POSTMAN.md)**: 36 endpoints probados, respuestas JSON reales, códigos HTTP, flujo E2E y comandos para correr la colección.
+- **[Reporte y Métricas SonarQube](docs/SONARQUBE_ANALISIS.md)**: Integración con SonarQube, Quality Gate (OK), 0 bugs/smells, deuda técnica (0 min) y cobertura JaCoCo (90.0%).
+- **[Metodología 12-Factor App](docs/DOCE_FACTORES.md)**: Tabla detallada factor/implementación con evidencias de código y configuración.
+- **[Principios SOLID en la Arquitectura](docs/PRINCIPIOS_SOLID.md)**: Explicación de los 5 principios SOLID, fragmentos de código, diagramas y verificación con ArchUnit.
+- **[Especificación y Arquitectura Técnica](docs/ARQUITECTURA_TECNICA.md)**: Arquitectura hexagonal, puertos y adaptadores, resiliencia (Resilience4j), telemetría asíncrona en BD y seguridad.
+- **[Pruebas de Carga y Estrés (JMeter & k6)](docs/PRUEBAS_CARGA_Y_ESTRES.md)**: 9 escenarios obligatorios E2E, métricas reales, latencias percentil $p_{90}$/$p_{95}$ y dashboard HTML.
+- **[Contrato de API REST](docs/API.md)**: Documentación de endpoints y payloads.
+
+---
+
 ## Requisitos
 
 - Docker y Docker Compose
@@ -80,7 +94,9 @@ Se exige una cobertura minima del **70%** en los paquetes `domain` y `applicatio
 |-----------------|--------------------------------------|-----------|
 | `AI_API_KEY`    | API key de Google Gemini. Si esta vacia se usa el stub de IA | No |
 | `AI_API_URL`    | URL base de Gemini                   | No (default `https://generativelanguage.googleapis.com`) |
-| `AI_MODEL`      | Modelo de Gemini                     | No (default `gemini-1.5-flash`) |
+| `AI_MODEL`      | Modelo de Gemini                     | No (default `gemini-3.5-flash-lite`) |
+| `AI_MAX_MOTIVOS` | Maximo de motivos generados por IA por generacion de recomendaciones | No (default `12`) |
+| `AI_MAX_LUGARES_PROMPT` | Maximo de lugares incluidos en el prompt de la busqueda inteligente | No (default `40`) |
 | `MAPS_API_KEY`  | API key de Google Geocoding. Si esta vacia se usa el stub | No |
 | `MAPS_API_URL`  | URL del endpoint de Geocoding        | No |
 | `MAPS_DEFAULT_LAT` / `MAPS_DEFAULT_LON` | Centro por defecto cuando no se puede geocodificar (Fusagasuga) | No |

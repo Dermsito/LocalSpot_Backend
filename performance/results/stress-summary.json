@@ -1,0 +1,153 @@
+{
+    "metrics": {
+        "data_sent": {
+            "count": 10533684,
+            "rate": 50048.73035479567
+        },
+        "http_req_connecting": {
+            "avg": 0.01048208166886343,
+            "min": 0,
+            "med": 0,
+            "max": 43.838594,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 78904,
+            "value": 0
+        },
+        "http_req_receiving": {
+            "med": 0.355037,
+            "max": 22.38636,
+            "p(90)": 0.7527796,
+            "p(95)": 1.0598235499999988,
+            "avg": 0.4362970760037515,
+            "min": -2.191979
+        },
+        "custom_req_duration": {
+            "avg": 335.0011262144877,
+            "min": 10.420388,
+            "med": 230.12758000000002,
+            "max": 2351.155608,
+            "p(90)": 832.7004792000001,
+            "p(95)": 984.4386466999996
+        },
+        "http_req_waiting": {
+            "p(95)": 831.9880998999996,
+            "avg": 185.40166130023752,
+            "min": 0,
+            "med": 31.8257105,
+            "max": 2350.874996,
+            "p(90)": 639.4961691999995
+        },
+        "checks": {
+            "passes": 78904,
+            "fails": 0,
+            "value": 1
+        },
+        "iteration_duration": {
+            "avg": 973.6388518127866,
+            "min": 613.633416,
+            "med": 850.5314845,
+            "max": 3261.46911,
+            "p(90)": 1542.3522517000001,
+            "p(95)": 1724.1459336499997
+        },
+        "failed_requests": {
+            "passes": 0,
+            "fails": 39452,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "iterations": {
+            "count": 39452,
+            "rate": 187.44842829511487
+        },
+        "http_req_blocked": {
+            "med": 0.009468,
+            "max": 43.998588,
+            "p(90)": 0.014137,
+            "p(95)": 0.017765,
+            "avg": 0.025388093835546976,
+            "min": 0.002645
+        },
+        "http_req_duration{expected_response:true}": {
+            "min": 0.415871,
+            "med": 32.290439500000005,
+            "max": 2351.155608,
+            "p(90)": 640.0414934999999,
+            "p(95)": 832.6966192999994,
+            "avg": 185.88307795704802
+        },
+        "http_req_duration": {
+            "avg": 185.88307795704802,
+            "min": 0.415871,
+            "med": 32.290439500000005,
+            "max": 2351.155608,
+            "p(90)": 640.0414934999999,
+            "p(95)": 832.6966192999994,
+            "thresholds": {
+                "p(95)<2500": false
+            }
+        },
+        "http_reqs": {
+            "count": 78904,
+            "rate": 374.89685659022973
+        },
+        "data_received": {
+            "count": 342770395,
+            "rate": 1628606.2001633807
+        },
+        "vus": {
+            "value": 9,
+            "min": 2,
+            "max": 449
+        },
+        "http_req_sending": {
+            "p(95)": 0.096369,
+            "avg": 0.045119580807055956,
+            "min": 0.008476,
+            "med": 0.028546,
+            "max": 10.602094,
+            "p(90)": 0.076821
+        },
+        "vus_max": {
+            "value": 450,
+            "min": 450,
+            "max": 450
+        },
+        "http_req_tls_handshaking": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0
+        }
+    },
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+            "GET /api/lugares status is 200": {
+                "path": "::GET /api/lugares status is 200",
+                "id": "6db1ef3a6ca517d8c2ec2cb65c482a71",
+                "passes": 39452,
+                "fails": 0,
+                "name": "GET /api/lugares status is 200"
+            },
+            "GET /api/lugares?q=zona status is 200": {
+                "name": "GET /api/lugares?q=zona status is 200",
+                "path": "::GET /api/lugares?q=zona status is 200",
+                "id": "43fb974b4c10671e4672acf3d9e14771",
+                "passes": 39452,
+                "fails": 0
+            }
+        },
+        "name": ""
+    }
+}
