@@ -48,8 +48,8 @@ public class GestionarEstablecimientosUseCase {
         lugar.setHorario(datos.getHorario());
         lugar.setLatitud(datos.getLatitud());
         lugar.setLongitud(datos.getLongitud());
-        lugar.setPrecioMin(datos.getPrecioMin());
-        lugar.setPrecioMax(datos.getPrecioMax());
+        lugar.setPrecioMin(datos.getPrecioMin() != null ? datos.getPrecioMin() : BigDecimal.ZERO);
+        lugar.setPrecioMax(datos.getPrecioMax() != null ? datos.getPrecioMax() : BigDecimal.ZERO);
         lugar.setEstadoVerificacion(EstadoVerificacion.PENDIENTE);
         lugar.setFechaRegistro(LocalDateTime.now());
         lugar.setFechaActualizacion(LocalDateTime.now());
