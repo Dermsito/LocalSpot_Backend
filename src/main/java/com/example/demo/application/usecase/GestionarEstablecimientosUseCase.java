@@ -45,6 +45,7 @@ public class GestionarEstablecimientosUseCase {
         lugar.setNombre(datos.getNombre());
         lugar.setDescripcion(datos.getDescripcion());
         lugar.setDireccion(datos.getDireccion());
+        lugar.setHorario(datos.getHorario());
         lugar.setLatitud(datos.getLatitud());
         lugar.setLongitud(datos.getLongitud());
         lugar.setPrecioMin(datos.getPrecioMin());

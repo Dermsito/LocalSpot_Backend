@@ -2,14 +2,14 @@ package com.example.demo.infrastructure.adapter.in.web;
 
 import com.example.demo.application.usecase.GestionarEstablecimientosUseCase;
 import com.example.demo.domain.model.Archivo;
+import com.example.demo.domain.model.Coordenadas;
 import com.example.demo.domain.model.Lugar;
+import com.example.demo.domain.port.GeocodingPort;
 import com.example.demo.domain.port.StoragePort;
-import com.example.demo.infrastructure.adapter.in.web.dto.LugarRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.LugarResponse;
 import com.example.demo.infrastructure.config.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,11 +29,14 @@ public class EstablecimientoController {
 
     private final GestionarEstablecimientosUseCase gestionarEstablecimientosUseCase;
     private final StoragePort storagePort;
+    private final GeocodingPort geocodingPort;
 
     public EstablecimientoController(GestionarEstablecimientosUseCase gestionarEstablecimientosUseCase,
-            StoragePort storagePort) {
+            StoragePort storagePort,
+            GeocodingPort geocodingPort) {
         this.gestionarEstablecimientosUseCase = gestionarEstablecimientosUseCase;
         this.storagePort = storagePort;
+        this.geocodingPort = geocodingPort;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -43,13 +47,27 @@ public class EstablecimientoController {
             @RequestParam(value = "descripcion", required = false) String descripcion,
             @RequestParam(value = "direccion", required = false) String direccion,
             @RequestParam(value = "horario", required = false) String horario,
-            @RequestParam(value = "latitud", required = false) java.math.BigDecimal latitud,
-            @RequestParam(value = "longitud", required = false) java.math.BigDecimal longitud,
-            @RequestParam(value = "precioMin", required = false) java.math.BigDecimal precioMin,
-            @RequestParam(value = "precioMax", required = false) java.math.BigDecimal precioMax,
+            @RequestParam(value = "latitud", required = false) BigDecimal latitud,
+            @RequestParam(value = "longitud", required = false) BigDecimal longitud,
+            @RequestParam(value = "precioMin", required = false) BigDecimal precioMin,
+            @RequestParam(value = "precioMax", required = false) BigDecimal precioMax,
             @RequestParam(value = "fotos", required = false) List<MultipartFile> fotos) throws IOException {
 
         Long idPropietario = SecurityUtils.getCurrentUsuarioId();
+
+        if ((latitud == null || longitud == null) && direccion != null && !direccion.isBlank()) {
+            try {
+                Coordenadas coords = geocodingPort.geocode(direccion);
+                if (coords != null && coords.latitud() != null && coords.longitud() != null) {
+                    latitud = coords.latitud();
+                    longitud = coords.longitud();
+                }
+            } catch (Exception ignored) {
+                // Si el geocodificador no logra resolver la dirección exacta, usa coordenadas base de Fusagasugá
+                latitud = new BigDecimal("4.3372");
+                longitud = new BigDecimal("-74.3640");
+            }
+        }
 
         Lugar datos = new Lugar();
         datos.setNombre(nombre);
