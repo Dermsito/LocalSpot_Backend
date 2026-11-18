@@ -1,4 +1,4 @@
-﻿package com.example.demo.infrastructure.adapter.in.web;
+package com.example.demo.infrastructure.adapter.in.web;
 
 import com.example.demo.application.usecase.GestionarEstablecimientosUseCase;
 import com.example.demo.domain.exception.LugarNoEncontradoException;
