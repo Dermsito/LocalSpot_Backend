@@ -1,15 +1,18 @@
-package com.example.demo.infrastructure.adapter.in.web;
+﻿package com.example.demo.infrastructure.adapter.in.web;
 
 import com.example.demo.application.usecase.GestionarEstablecimientosUseCase;
+import com.example.demo.domain.exception.LugarNoEncontradoException;
+import com.example.demo.domain.exception.OperacionNoAutorizadaException;
 import com.example.demo.domain.model.Archivo;
-import com.example.demo.domain.model.Coordenadas;
 import com.example.demo.domain.model.Lugar;
-import com.example.demo.domain.port.GeocodingPort;
+import com.example.demo.domain.port.LugarRepositoryPort;
 import com.example.demo.domain.port.StoragePort;
+import com.example.demo.infrastructure.adapter.in.web.dto.LugarRequest;
 import com.example.demo.infrastructure.adapter.in.web.dto.LugarResponse;
 import com.example.demo.infrastructure.config.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +27,19 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/establecimientos")
-@Tag(name = "Establecimientos", description = "Propietario: registro de establecimientos")
+@Tag(name = "Establecimientos", description = "Propietario: registro y actualizacion de establecimientos")
 public class EstablecimientoController {
 
     private final GestionarEstablecimientosUseCase gestionarEstablecimientosUseCase;
     private final StoragePort storagePort;
-    private final GeocodingPort geocodingPort;
+    private final LugarRepositoryPort lugarRepositoryPort;
 
     public EstablecimientoController(GestionarEstablecimientosUseCase gestionarEstablecimientosUseCase,
             StoragePort storagePort,
-            GeocodingPort geocodingPort) {
+            LugarRepositoryPort lugarRepositoryPort) {
         this.gestionarEstablecimientosUseCase = gestionarEstablecimientosUseCase;
         this.storagePort = storagePort;
-        this.geocodingPort = geocodingPort;
+        this.lugarRepositoryPort = lugarRepositoryPort;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -55,18 +58,9 @@ public class EstablecimientoController {
 
         Long idPropietario = SecurityUtils.getCurrentUsuarioId();
 
-        if ((latitud == null || longitud == null) && direccion != null && !direccion.isBlank()) {
-            try {
-                Coordenadas coords = geocodingPort.geocode(direccion);
-                if (coords != null && coords.latitud() != null && coords.longitud() != null) {
-                    latitud = coords.latitud();
-                    longitud = coords.longitud();
-                }
-            } catch (Exception ignored) {
-                // Si el geocodificador no logra resolver la dirección exacta, usa coordenadas base de Fusagasugá
-                latitud = new BigDecimal("4.3372");
-                longitud = new BigDecimal("-74.3640");
-            }
+        if (latitud == null || longitud == null) {
+            latitud = new BigDecimal("4.3372");
+            longitud = new BigDecimal("-74.3640");
         }
 
         Lugar datos = new Lugar();
@@ -96,6 +90,41 @@ public class EstablecimientoController {
 
         Lugar lugar = gestionarEstablecimientosUseCase.registrar(idPropietario, datos, urlsFotos);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(lugar));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Actualizar mi establecimiento", description = "Actualiza datos y coordenadas de un lugar perteneciente al propietario.")
+    public ResponseEntity<LugarResponse> actualizarMiLugar(
+            @PathVariable Long id,
+            @Valid @RequestBody LugarRequest request) {
+        Long idPropietario = SecurityUtils.getCurrentUsuarioId();
+        Lugar existente = lugarRepositoryPort.findById(id)
+                .orElseThrow(() -> new LugarNoEncontradoException(id));
+
+        if (existente.getIdPropietario() == null || !existente.getIdPropietario().equals(idPropietario)) {
+            throw new OperacionNoAutorizadaException("No tienes permiso para editar este establecimiento");
+        }
+
+        existente.setNombre(request.getNombre());
+        existente.setDescripcion(request.getDescripcion());
+        existente.setDireccion(request.getDireccion());
+        existente.setHorario(request.getHorario());
+        if (request.getIdCategoria() != null) {
+            existente.setIdCategoria(request.getIdCategoria());
+        }
+        if (request.getLatitud() != null && request.getLongitud() != null) {
+            existente.setLatitud(request.getLatitud());
+            existente.setLongitud(request.getLongitud());
+        }
+        if (request.getPrecioMin() != null) {
+            existente.setPrecioMin(request.getPrecioMin());
+        }
+        if (request.getPrecioMax() != null) {
+            existente.setPrecioMax(request.getPrecioMax());
+        }
+
+        Lugar guardado = lugarRepositoryPort.save(existente);
+        return ResponseEntity.ok(toResponse(guardado));
     }
 
     @GetMapping("/mis-lugares")
