@@ -99,7 +99,7 @@ public class EstablecimientoController {
             @Valid @RequestBody LugarRequest request) {
         Long idPropietario = SecurityUtils.getCurrentUsuarioId();
         Lugar existente = lugarRepositoryPort.findById(id)
-                .orElseThrow(() -> new LugarNoEncontradoException(id));
+                .orElseThrow(() -> new LugarNoEncontradoException("Lugar no encontrado con id: " + id));
 
         if (existente.getIdPropietario() == null || !existente.getIdPropietario().equals(idPropietario)) {
             throw new OperacionNoAutorizadaException("No tienes permiso para editar este establecimiento");
