@@ -31,7 +31,7 @@ public class SmtpEmailAdapter implements EmailPort {
     private final HttpClient httpClient;
 
     public SmtpEmailAdapter(JavaMailSender javaMailSender,
-                            @Value("${localspot.verificacion.remitente:localspot.soporte@gmail.com}") String remitente,
+                            @Value("${localspot.verificacion.remitente:${MAIL_FROM:localspot.soporte@gmail.com}}") String remitente,
                             @Value("${BREVO_API_KEY:}") String brevoApiKey,
                             ObjectMapper objectMapper) {
         this.javaMailSender = javaMailSender;
