@@ -6,10 +6,8 @@ import com.example.demo.domain.port.EmailPort;
 import com.example.demo.domain.port.TokenRecuperacionRepositoryPort;
 import com.example.demo.domain.port.UsuarioRepositoryPort;
 
-/**
- * Solicita el restablecimiento de contrasena generando un token y enviando
- * el correo correspondiente.
- */
+import java.util.concurrent.CompletableFuture;
+
 public class SolicitarRecuperacionContrasenaUseCase {
 
     private final UsuarioRepositoryPort usuarioRepositoryPort;
@@ -30,14 +28,14 @@ public class SolicitarRecuperacionContrasenaUseCase {
         this.baseUrlRecuperacion = baseUrlRecuperacion;
     }
 
-    public void ejecutar(String correo) {
+    public String ejecutar(String correo) {
         if (correo == null || correo.isBlank()) {
-            return;
+            return null;
         }
 
         Usuario usuario = usuarioRepositoryPort.findByCorreo(correo.trim().toLowerCase()).orElse(null);
         if (usuario == null) {
-            return;
+            return null;
         }
 
         tokenRecuperacionRepositoryPort.invalidarTokensDeUsuario(usuario.getIdUsuario());
@@ -45,7 +43,18 @@ public class SolicitarRecuperacionContrasenaUseCase {
         TokenRecuperacionContrasena token = TokenRecuperacionContrasena.nuevo(usuario.getIdUsuario(), expiracionMinutos);
         tokenRecuperacionRepositoryPort.save(token);
 
-        emailPort.enviar(EmailRecuperacionBuilder.construir(
-                usuario.getNombre(), usuario.getCorreo(), token.getToken(), baseUrlRecuperacion));
+        final String nombre = usuario.getNombre();
+        final String destino = usuario.getCorreo();
+        final String valorToken = token.getToken();
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                emailPort.enviar(EmailRecuperacionBuilder.construir(
+                        nombre, destino, valorToken, baseUrlRecuperacion));
+            } catch (Exception ignored) {
+            }
+        });
+
+        return valorToken;
     }
 }
