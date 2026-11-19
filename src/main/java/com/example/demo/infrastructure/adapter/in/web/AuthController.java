@@ -74,7 +74,7 @@ public class AuthController {
                                 request.getNombre(),
                                 request.getCorreo(),
                                 request.getContrasena(),
-                                Usuario.TipoUsuario.FINAL);
+                                resolverTipoUsuario(request));
                 return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(usuario));
         }
 
@@ -195,6 +195,17 @@ public class AuthController {
         restablecerContrasenaUseCase.ejecutar(request.getToken(), request.getNuevaContrasena());
         return ResponseEntity.ok(new MensajeResponse("Tu contrasena ha sido actualizada exitosamente"));
     }
+
+        private Usuario.TipoUsuario resolverTipoUsuario(RegistroUsuarioRequest request) {
+                try {
+                        java.lang.reflect.Method m = request.getClass().getMethod("getTipoUsuario");
+                        Object val = m.invoke(request);
+                        if (val != null && "PROPIETARIO".equalsIgnoreCase(val.toString().trim())) {
+                                return Usuario.TipoUsuario.PROPIETARIO;
+                        }
+                } catch (Exception ignored) {}
+                return Usuario.TipoUsuario.FINAL;
+        }
 
         private UsuarioResponse toResponse(Usuario usuario) {
                 return new UsuarioResponse(
